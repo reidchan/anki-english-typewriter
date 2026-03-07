@@ -183,3 +183,42 @@ export class RevisionWordRecord implements IRevisionWordRecord {
     this.errorCount = errorCount
   }
 }
+
+export interface IAnkiCard {
+  id?: number
+  guid: string
+  front: string
+  back: string
+  deck?: string
+  notetype?: string
+  tags?: string
+  importedAt: number
+}
+
+export class AnkiCard implements IAnkiCard {
+  id?: number
+  guid: string
+  front: string
+  back: string
+  deck?: string
+  notetype?: string
+  tags?: string
+  importedAt: number
+
+  constructor(data: {
+    guid: string
+    front: string
+    back: string
+    deck?: string
+    notetype?: string
+    tags?: string
+  }) {
+    this.guid = data.guid
+    this.front = data.front
+    this.back = data.back
+    this.deck = data.deck
+    this.notetype = data.notetype
+    this.tags = data.tags
+    this.importedAt = getUTCUnixTimestamp()
+  }
+}

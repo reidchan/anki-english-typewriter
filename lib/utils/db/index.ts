@@ -1,5 +1,5 @@
-import type { IChapterRecord, IReviewRecord, IRevisionDictRecord, IWordRecord, LetterMistakes } from './record'
-import { ChapterRecord, ReviewRecord, WordRecord } from './record'
+import type { IAnkiCard, IChapterRecord, IReviewRecord, IRevisionDictRecord, IWordRecord, LetterMistakes } from './record'
+import { AnkiCard, ChapterRecord, ReviewRecord, WordRecord } from './record'
 import { TypingContext, TypingStateActionType } from '@/components/Typing/store'
 import type { TypingState } from '@/pages/Typing/store/type'
 import { currentChapterAtom, currentDictIdAtom, isReviewModeAtom } from '@/lib/store'
@@ -16,6 +16,8 @@ class RecordDB extends Dexie {
   revisionDictRecords!: Table<IRevisionDictRecord, number>
   revisionWordRecords!: Table<IWordRecord, number>
 
+  ankiCards!: Table<IAnkiCard, number>
+
   constructor() {
     super('RecordDB')
     this.version(1).stores({
@@ -31,6 +33,12 @@ class RecordDB extends Dexie {
       chapterRecords: '++id,timeStamp,dict,chapter,time,[dict+chapter]',
       reviewRecords: '++id,dict,createTime,isFinished',
     })
+    this.version(4).stores({
+      wordRecords: '++id,word,timeStamp,dict,chapter,wrongCount,[dict+chapter]',
+      chapterRecords: '++id,timeStamp,dict,chapter,time,[dict+chapter]',
+      reviewRecords: '++id,dict,createTime,isFinished',
+      ankiCards: '++id,guid,front,back,deck,notetype,tags,importedAt,[guid]',
+    })
   }
 }
 
@@ -39,6 +47,7 @@ export const db = new RecordDB()
 db.wordRecords.mapToClass(WordRecord)
 db.chapterRecords.mapToClass(ChapterRecord)
 db.reviewRecords.mapToClass(ReviewRecord)
+db.ankiCards.mapToClass(AnkiCard)
 
 export function useSaveChapterRecord() {
   const currentChapter = useAtomValue(currentChapterAtom)
@@ -132,4 +141,107 @@ export function useDeleteWordRecord() {
   }, [])
 
   return { deleteWordRecord }
+}
+
+// Anki Card operations
+export async function addAnkiCard(card: Omit<IAnkiCard, 'id' | 'importedAt'>) {
+  try {
+    const ankiCard = new AnkiCard(card)
+    const id = await db.ankiCards.add(ankiCard)
+    return id
+  } catch (error) {
+    console.error('添加 Anki 卡片失败:', error)
+    throw error
+  }
+}
+
+export async function addAnkiCards(cards: Array<Omit<IAnkiCard, 'id' | 'importedAt'>>) {
+  try {
+    const ankiCards = cards.map((card) => new AnkiCard(card))
+    const ids = await db.ankiCards.bulkAdd(ankiCards, { allKeys: true })
+    return ids
+  } catch (error) {
+    console.error('批量添加 Anki 卡片失败:', error)
+    throw error
+  }
+}
+
+export async function getAnkiCardByGuid(guid: string) {
+  try {
+    const card = await db.ankiCards.where('guid').equals(guid).first()
+    return card
+  } catch (error) {
+    console.error('查询 Anki 卡片失败:', error)
+    throw error
+  }
+}
+
+export async function getAllAnkiCards() {
+  try {
+    const cards = await db.ankiCards.toArray()
+    return cards
+  } catch (error) {
+    console.error('获取所有 Anki 卡片失败:', error)
+    throw error
+  }
+}
+
+export async function getAnkiCardsByDeck(deck: string) {
+  try {
+    const cards = await db.ankiCards.where('deck').equals(deck).toArray()
+    return cards
+  } catch (error) {
+    console.error('获取指定牌组的 Anki 卡片失败:', error)
+    throw error
+  }
+}
+
+export async function updateAnkiCard(id: number, updates: Partial<IAnkiCard>) {
+  try {
+    await db.ankiCards.update(id, updates)
+  } catch (error) {
+    console.error('更新 Anki 卡片失败:', error)
+    throw error
+  }
+}
+
+export async function deleteAnkiCard(id: number) {
+  try {
+    await db.ankiCards.delete(id)
+  } catch (error) {
+    console.error('删除 Anki 卡片失败:', error)
+    throw error
+  }
+}
+
+export async function deleteAnkiCardsByDeck(deck: string) {
+  try {
+    const deletedCount = await db.ankiCards.where('deck').equals(deck).delete()
+    return deletedCount
+  } catch (error) {
+    console.error('删除牌组卡片失败:', error)
+    throw error
+  }
+}
+
+export async function clearAllAnkiCards() {
+  try {
+    await db.ankiCards.clear()
+  } catch (error) {
+    console.error('清空 Anki 卡片失败:', error)
+    throw error
+  }
+}
+
+export async function searchAnkiCards(query: string) {
+  try {
+    const lowerQuery = query.toLowerCase()
+    const cards = await db.ankiCards
+      .filter((card) => card.front.toLowerCase().includes(lowerQuery) || card.back.toLowerCase().includes(lowerQuery))
+      .toArray()
+    return cards
+  } catch (error) {
+    console.error('搜索 Anki 卡片失败:', error)
+    throw error
+  }
 }
