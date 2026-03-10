@@ -46,7 +46,7 @@ export function useWordList(): UseWordListResult {
         setAnkiError(undefined);
       } catch (e) {
         setAnkiError(
-          e instanceof Error ? e : new Error("Failed to load Anki cards"),
+          e instanceof Error ? e : new Error("Failed to load Anki cards")
         );
       } finally {
         setAnkiLoading(false);
@@ -94,7 +94,7 @@ export function useWordList(): UseWordListResult {
           usphone: "",
           ukphone: "",
           index,
-        }),
+        })
       );
     }
 
@@ -106,7 +106,7 @@ export function useWordList(): UseWordListResult {
     } else if (wordList) {
       newWords = wordList.slice(
         currentChapter * CHAPTER_LENGTH,
-        (currentChapter + 1) * CHAPTER_LENGTH,
+        (currentChapter + 1) * CHAPTER_LENGTH
       );
     } else {
       newWords = [];

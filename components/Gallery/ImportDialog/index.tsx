@@ -24,7 +24,13 @@ interface ColumnMapping {
 
 type ImportStatus = "idle" | "loading" | "success" | "error";
 
-export function ImportDialog({ trigger }: { trigger: React.ReactNode }) {
+export function ImportDialog({
+  trigger,
+  onSuccess,
+}: {
+  trigger: React.ReactNode;
+  onSuccess?: () => void;
+}) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
@@ -126,6 +132,7 @@ export function ImportDialog({ trigger }: { trigger: React.ReactNode }) {
           setStatus("idle");
           setSelectedFile(null);
           setMessage("");
+          onSuccess?.();
         }, 2000);
       } catch (error) {
         console.error("导入卡片失败:", error);

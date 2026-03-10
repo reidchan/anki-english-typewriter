@@ -1,61 +1,72 @@
-'use client'
+"use client";
 
-import Tooltip from '@/components/Tooltip'
-import { CHAPTER_LENGTH } from '@/lib/constants'
-import { ankiChapterAtom, currentChapterAtom, currentDictInfoAtom, isAnkiModeAtom, isReviewModeAtom } from '@/lib/store'
-import { getAllAnkiCards } from '@/lib/utils/db'
-import range from '@/lib/utils/range'
-import { Listbox, Transition } from '@headlessui/react'
-import { useAtom, useAtomValue } from 'jotai'
-import Link from 'next/link'
-import { Fragment, useEffect, useState } from 'react'
+import Tooltip from "@/components/Tooltip";
+import { CHAPTER_LENGTH } from "@/lib/constants";
+import {
+  ankiChapterAtom,
+  currentChapterAtom,
+  currentDictInfoAtom,
+  isAnkiModeAtom,
+  isReviewModeAtom,
+} from "@/lib/store";
+import { getAllAnkiCards } from "@/lib/utils/db";
+import range from "@/lib/utils/range";
+import { Listbox, Transition } from "@headlessui/react";
+import { useAtom, useAtomValue } from "jotai";
+import Link from "next/link";
+import { Fragment, useEffect, useState } from "react";
 
 export const DictChapterButton = () => {
-  const currentDictInfo = useAtomValue(currentDictInfoAtom)
-  const [currentChapter, setCurrentChapter] = useAtom(currentChapterAtom)
-  const [ankiChapter, setAnkiChapter] = useAtom(ankiChapterAtom)
-  const [isAnkiMode, setIsAnkiMode] = useAtom(isAnkiModeAtom)
-  const isReviewMode = useAtomValue(isReviewModeAtom)
+  const currentDictInfo = useAtomValue(currentDictInfoAtom);
+  const [currentChapter, setCurrentChapter] = useAtom(currentChapterAtom);
+  const [ankiChapter, setAnkiChapter] = useAtom(ankiChapterAtom);
+  const [isAnkiMode, setIsAnkiMode] = useAtom(isAnkiModeAtom);
+  const isReviewMode = useAtomValue(isReviewModeAtom);
 
-  const [ankiCardCount, setAnkiCardCount] = useState(0)
+  const [ankiCardCount, setAnkiCardCount] = useState(0);
 
   useEffect(() => {
     const loadAnkiCardCount = async () => {
-      const cards = await getAllAnkiCards()
-      setAnkiCardCount(cards.length)
+      const cards = await getAllAnkiCards();
+      setAnkiCardCount(cards.length);
+    };
+    loadAnkiCardCount();
+  }, []);
+
+  const dictChapterCount = currentDictInfo.chapterCount;
+  const ankiChapterCount = Math.max(
+    1,
+    Math.ceil(ankiCardCount / CHAPTER_LENGTH)
+  );
+
+  const chapterCount = isAnkiMode ? ankiChapterCount : dictChapterCount;
+  const activeChapter = isAnkiMode ? ankiChapter : currentChapter;
+  const setActiveChapter = isAnkiMode ? setAnkiChapter : setCurrentChapter;
+
+  const handleKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (
+    event
+  ) => {
+    if (event.key === " ") {
+      event.preventDefault();
     }
-    loadAnkiCardCount()
-  }, [])
-
-  const dictChapterCount = currentDictInfo.chapterCount
-  const ankiChapterCount = Math.max(1, Math.ceil(ankiCardCount / CHAPTER_LENGTH))
-
-  const chapterCount = isAnkiMode ? ankiChapterCount : dictChapterCount
-  const activeChapter = isAnkiMode ? ankiChapter : currentChapter
-  const setActiveChapter = isAnkiMode ? setAnkiChapter : setCurrentChapter
-
-  const handleKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (event) => {
-    if (event.key === ' ') {
-      event.preventDefault()
-    }
-  }
+  };
 
   const toggleAnkiMode = () => {
-    setIsAnkiMode(!isAnkiMode)
-  }
+    setIsAnkiMode(!isAnkiMode);
+  };
 
   return (
     <>
-      <Tooltip content={isAnkiMode ? '切换到词典模式' : '切换到 Anki 模式'}>
+      <Tooltip content={isAnkiMode ? "切换到词典模式" : "切换到 Anki 模式"}>
         <button
           onClick={toggleAnkiMode}
           className={`rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out focus:outline-none ${
             isAnkiMode
-              ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-              : 'hover:bg-indigo-400 hover:text-white dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100'
+              ? "bg-emerald-500 text-white hover:bg-emerald-600"
+              : "hover:bg-indigo-400 hover:text-white dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
           }`}
         >
-          {isAnkiMode ? 'Anki' : '词典'}
+          {isAnkiMode ? "Anki" : "词典"}
         </button>
       </Tooltip>
       {isAnkiMode ? (
@@ -73,40 +84,10 @@ export const DictChapterButton = () => {
             className="block rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out hover:bg-indigo-400 hover:text-white focus:outline-none dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
             href="/gallery"
           >
-            {currentDictInfo.name} {isReviewMode && '错题复习'}
+            {currentDictInfo.name} {isReviewMode && "错题复习"}
           </Link>
         </Tooltip>
       )}
-      {!isReviewMode && (
-        <Tooltip content="章节切换">
-          <Listbox value={activeChapter} onChange={setActiveChapter}>
-            <Listbox.Button
-              onKeyDown={handleKeyDown}
-              className="rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out hover:bg-indigo-400 hover:text-white focus:outline-none dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
-            >
-              第 {activeChapter + 1} 章
-            </Listbox.Button>
-            <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-              <Listbox.Options className="listbox-options z-10 w-32">
-                {range(0, chapterCount, 1).map((index) => (
-                  <Listbox.Option key={index} value={index}>
-                    {({ selected }) => (
-                      <div className="group flex cursor-pointer items-center justify-between">
-                        {selected ? (
-                          <span className="listbox-options-icon">
-                            ✓
-                          </span>
-                        ) : null}
-                        <span>第 {index + 1} 章</span>
-                      </div>
-                    )}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </Transition>
-          </Listbox>
-        </Tooltip>
-      )}
     </>
-  )
-}
+  );
+};

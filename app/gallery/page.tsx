@@ -36,6 +36,7 @@ export default function GalleryPage() {
                 导入
               </Button>
             }
+            onSuccess={loadData}
           />
         </div>
 
