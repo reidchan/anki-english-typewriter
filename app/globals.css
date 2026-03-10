@@ -51,38 +51,52 @@ body {
 /* Utility Classes for Buttons and Cards */
 @layer utilities {
   .btn-primary {
-    @apply h-10 rounded-xl px-5 font-medium text-white shadow-md;
-    @apply bg-gradient-to-r from-indigo-500 to-purple-600;
+    @apply h-10 px-5 font-medium text-white shadow-md;
     @apply hover:scale-105 hover:shadow-lg active:scale-95;
     @apply transition-all duration-200;
-    @apply focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+    @apply focus:ring-2 focus:ring-offset-2;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(to right, var(--color-primary-start), var(--color-primary-end));
   }
 
   .btn-secondary {
-    @apply h-10 rounded-xl px-5 font-medium shadow-md;
-    @apply bg-gray-100 text-gray-700;
+    @apply h-10 px-5 font-medium shadow-md;
     @apply hover:scale-105 hover:shadow-lg active:scale-95;
     @apply transition-all duration-200;
-    @apply focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
-    @apply dark:bg-gray-800 dark:text-gray-200;
+    @apply focus:ring-2 focus:ring-offset-2;
+    border-radius: var(--radius-xl);
+    background-color: rgb(243 244 246);
+    color: rgb(55 65 81);
+  }
+
+  .btn-secondary:hover {
+    background-color: rgb(229 231 235);
+  }
+
+  .btn-secondary:active {
+    background-color: rgb(209 213 219);
   }
 
   .btn-gradient-orange {
-    @apply h-10 rounded-xl px-5 font-medium text-white shadow-md;
-    @apply bg-gradient-to-r from-orange-400 to-pink-500;
+    @apply h-10 px-5 font-medium text-white shadow-md;
     @apply hover:scale-105 hover:shadow-lg active:scale-95;
     @apply transition-all duration-200;
-    @apply focus:ring-2 focus:ring-orange-500 focus:ring-offset-2;
+    @apply focus:ring-2 focus:ring-offset-2;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(to right, var(--color-skip-start), var(--color-skip-end));
   }
 
   .card-glass {
-    @apply rounded-2xl bg-white/80 backdrop-blur-xl shadow-lg;
-    @apply dark:bg-gray-800/80 dark:backdrop-blur-xl;
+    @apply backdrop-blur-xl shadow-lg;
+    border-radius: var(--radius-2xl);
+    background-color: rgb(255 255 255 / 0.8);
   }
 
   .card-solid {
-    @apply rounded-2xl bg-white p-12 shadow-2xl;
-    @apply dark:bg-gray-900 dark:shadow-gray-950;
+    border-radius: var(--radius-2xl);
+    background-color: white;
+    padding: var(--spacing-xl) var(--spacing-2xl);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   }
 }
 
