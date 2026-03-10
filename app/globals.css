@@ -50,7 +50,7 @@ body {
 
 /* Utility Classes for Buttons and Cards */
 @layer utilities {
-  .btn-primary {
+  .my-btn-primary {
     @apply h-10 px-5 font-medium text-white shadow-md;
     @apply hover:scale-105 hover:shadow-lg active:scale-95;
     @apply transition-all duration-200;
@@ -59,7 +59,7 @@ body {
     background: linear-gradient(to right, var(--color-primary-start), var(--color-primary-end));
   }
 
-  .btn-secondary {
+  .my-btn-secondary {
     @apply h-10 px-5 font-medium shadow-md;
     @apply hover:scale-105 hover:shadow-lg active:scale-95;
     @apply transition-all duration-200;
@@ -69,15 +69,15 @@ body {
     color: rgb(55 65 81);
   }
 
-  .btn-secondary:hover {
+  .my-btn-secondary:hover {
     background-color: rgb(229 231 235);
   }
 
-  .btn-secondary:active {
+  .my-btn-secondary:active {
     background-color: rgb(209 213 219);
   }
 
-  .btn-gradient-orange {
+  .my-btn-gradient-orange {
     @apply h-10 px-5 font-medium text-white shadow-md;
     @apply hover:scale-105 hover:shadow-lg active:scale-95;
     @apply transition-all duration-200;
@@ -86,13 +86,13 @@ body {
     background: linear-gradient(to right, var(--color-skip-start), var(--color-skip-end));
   }
 
-  .card-glass {
+  .my-card-glass {
     @apply backdrop-blur-xl shadow-lg;
     border-radius: var(--radius-2xl);
     background-color: rgb(255 255 255 / 0.8);
   }
 
-  .card-solid {
+  .my-card-solid {
     border-radius: var(--radius-2xl);
     background-color: white;
     padding: var(--spacing-xl) var(--spacing-2xl);
