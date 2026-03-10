@@ -1,13 +1,16 @@
 import { CHAPTER_LENGTH } from "@/lib/constants";
 import {
+  ankiChapterAtom,
   currentChapterAtom,
   currentDictInfoAtom,
+  isAnkiModeAtom,
   reviewModeInfoAtom,
 } from "@/lib/store";
 import type { Word, WordWithIndex } from "@/lib/types/index";
+import { getAllAnkiCards } from "@/lib/utils/db";
 import { wordListFetcher } from "@/lib/utils/wordListFetcher";
 import { useAtom, useAtomValue } from "jotai";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 
 export type UseWordListResult = {
@@ -17,27 +20,84 @@ export type UseWordListResult = {
 };
 
 /**
- * Use word lists from the current selected dictionary.
+ * Use word lists from the current selected dictionary or Anki cards.
  */
 export function useWordList(): UseWordListResult {
+  const isAnkiMode = useAtomValue(isAnkiModeAtom);
   const currentDictInfo = useAtomValue(currentDictInfoAtom);
   const [currentChapter, setCurrentChapter] = useAtom(currentChapterAtom);
+  const [ankiChapter, setAnkiChapter] = useAtom(ankiChapterAtom);
   const { isReviewMode, reviewRecord } = useAtomValue(reviewModeInfoAtom);
 
-  // Reset current chapter to 0, when currentChapter is greater than chapterCount.
-  if (currentChapter >= currentDictInfo.chapterCount) {
+  const [ankiCards, setAnkiCards] = useState<
+    Array<{ front: string; back: string }>
+  >([]);
+  const [ankiLoading, setAnkiLoading] = useState(false);
+  const [ankiError, setAnkiError] = useState<Error | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isAnkiMode) return;
+
+    const loadAnkiCards = async () => {
+      try {
+        setAnkiLoading(true);
+        const cards = await getAllAnkiCards();
+        setAnkiCards(cards);
+        setAnkiError(undefined);
+      } catch (e) {
+        setAnkiError(
+          e instanceof Error ? e : new Error("Failed to load Anki cards"),
+        );
+      } finally {
+        setAnkiLoading(false);
+      }
+    };
+
+    loadAnkiCards();
+  }, [isAnkiMode]);
+
+  const ankiChapterCount = Math.ceil(ankiCards.length / CHAPTER_LENGTH);
+
+  if (isAnkiMode && ankiChapter >= ankiChapterCount && ankiChapterCount > 0) {
+    setAnkiChapter(0);
+  }
+
+  if (!isAnkiMode && currentChapter >= currentDictInfo.chapterCount) {
     setCurrentChapter(0);
   }
 
   const isFirstChapter =
-    !isReviewMode && currentDictInfo.id === "cet4" && currentChapter === 0;
+    !isAnkiMode &&
+    !isReviewMode &&
+    currentDictInfo.id === "cet4" &&
+    currentChapter === 0;
+
   const {
     data: wordList,
-    error,
-    isLoading,
-  } = useSWR(currentDictInfo.url, wordListFetcher);
+    error: dictError,
+    isLoading: dictLoading,
+  } = useSWR(!isAnkiMode ? currentDictInfo.url : null, wordListFetcher);
 
   const words: WordWithIndex[] = useMemo(() => {
+    if (isAnkiMode) {
+      if (ankiCards.length === 0) return [];
+
+      const chapterCards = ankiCards.slice(
+        ankiChapter * CHAPTER_LENGTH,
+        (ankiChapter + 1) * CHAPTER_LENGTH,
+      );
+
+      return chapterCards.map(
+        (card, index): WordWithIndex => ({
+          name: card.back,
+          trans: [card.front],
+          usphone: "",
+          ukphone: "",
+          index,
+        }),
+      );
+    }
+
     let newWords: Word[];
     if (isFirstChapter) {
       newWords = firstChapter;
@@ -46,13 +106,12 @@ export function useWordList(): UseWordListResult {
     } else if (wordList) {
       newWords = wordList.slice(
         currentChapter * CHAPTER_LENGTH,
-        (currentChapter + 1) * CHAPTER_LENGTH
+        (currentChapter + 1) * CHAPTER_LENGTH,
       );
     } else {
       newWords = [];
     }
 
-    // 记录原始 index, 并对 word.trans 做兜底处理
     return newWords.map((word, index) => {
       let trans: string[];
       if (Array.isArray(word.trans)) {
@@ -73,12 +132,18 @@ export function useWordList(): UseWordListResult {
       };
     });
   }, [
+    isAnkiMode,
+    ankiCards,
+    ankiChapter,
     isFirstChapter,
     isReviewMode,
     wordList,
     reviewRecord?.words,
     currentChapter,
   ]);
+
+  const isLoading = isAnkiMode ? ankiLoading : dictLoading;
+  const error = isAnkiMode ? ankiError : dictError;
 
   return { words, isLoading, error };
 }

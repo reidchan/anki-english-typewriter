@@ -118,9 +118,7 @@ export const phoneticConfigAtom = atomForConfig("phoneticConfig", {
 
 export const isOpenDarkModeAtom = atomWithStorage(
   "isOpenDarkModeAtom",
-  typeof window !== 'undefined' 
-    ? window.matchMedia("(prefers-color-scheme: dark)").matches 
-    : false
+  false
 );
 
 export const isShowSkipAtom = atom(false);
@@ -150,6 +148,9 @@ export const hasSeenEnhancedPromotionAtom = atomWithStorage(
   "hasSeenEnhancedPromotion",
   false
 );
+
+export const isAnkiModeAtom = atomWithStorage("isAnkiMode", false);
+export const ankiChapterAtom = atomWithStorage("ankiChapter", 0);
 
 // for dev test
 //   dismissStartCardDateAtom = atom<Date | null>(new Date())

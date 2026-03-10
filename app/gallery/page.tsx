@@ -4,19 +4,25 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { Button } from "@headlessui/react";
 import { ImportDialog } from "@/components/Gallery/ImportDialog";
-import { getAllAnkiCards } from "@/lib/utils/db";
+import { deleteAnkiCard, getAllAnkiCards } from "@/lib/utils/db";
 
 export default function GalleryPage() {
   const [data, setData] = useState<any[]>([]);
-  useEffect(() => {
-    const loadData = async () => {
-      const data = await getAllAnkiCards();
-      console.log("data =>", data);
-      setData(data);
-    };
 
+  const loadData = async () => {
+    const data = await getAllAnkiCards();
+    console.log("data =>", data);
+    setData(data);
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
+
+  const handleDelete = async (id: number) => {
+    await deleteAnkiCard(id);
+    loadData();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
@@ -47,6 +53,9 @@ export default function GalleryPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   导入时间
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  操作
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
@@ -66,6 +75,20 @@ export default function GalleryPage() {
                       {dayjs(item.importedAt * 1000).format(
                         "YYYY-MM-DD HH:mm:ss",
                       )}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm">
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(`确定要删除「${item.front}」吗？`)
+                          ) {
+                            handleDelete(item.id);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-800 transition-colors duration-150 cursor-pointer"
+                      >
+                        删除
+                      </button>
                     </td>
                   </tr>
                 );
