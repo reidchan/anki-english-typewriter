@@ -62,7 +62,7 @@ const ResultScreen = () => {
         wrongCount: log.wrongCount,
         wrongLetters: Object.entries(log.LetterMistakes)
           .map(
-            ([key, mistakes]) => `${wordName[Number(key)]}:${mistakes.length}`
+            ([key, mistakes]) => `${wordName[Number(key)]}:${mistakes.length}`,
           )
           .join(";"),
       };
@@ -196,7 +196,7 @@ const ResultScreen = () => {
     () => {
       nextButtonHandler();
     },
-    { preventDefault: true }
+    { preventDefault: true },
   );
 
   useHotkeys(
@@ -206,7 +206,7 @@ const ResultScreen = () => {
       e.stopPropagation();
       repeatButtonHandler();
     },
-    { preventDefault: true }
+    { preventDefault: true },
   );
 
   useHotkeys(
@@ -214,7 +214,7 @@ const ResultScreen = () => {
     () => {
       dictationButtonHandler();
     },
-    { preventDefault: true }
+    { preventDefault: true },
   );
 
   const handleOpenInfoPanel = useCallback(
@@ -222,7 +222,7 @@ const ResultScreen = () => {
       recordOpenInfoPanelAction(modalType, "resultScreen");
       setInfoPanelState((state) => ({ ...state, [modalType]: true }));
     },
-    [setInfoPanelState]
+    [setInfoPanelState],
   );
 
   return (

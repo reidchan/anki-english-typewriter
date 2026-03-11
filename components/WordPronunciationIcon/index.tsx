@@ -1,38 +1,38 @@
-'use client'
+"use client";
 
-import { SoundIcon } from './SoundIcon'
-import usePronunciationSound from '@/lib/hooks/usePronunciation'
-import type { Word } from '@/lib/types'
-import { useCallback, useEffect, useImperativeHandle } from 'react'
-import React from 'react'
+import { SoundIcon } from "./SoundIcon";
+import usePronunciationSound from "@/lib/hooks/usePronunciation";
+import type { Word } from "@/lib/types";
+import { useCallback, useEffect, useImperativeHandle } from "react";
+import React from "react";
 
 export const WordPronunciationIcon = React.forwardRef<
   WordPronunciationIconRef,
   { word: Word; lang: string; className?: string; iconClassName?: string }
 >(({ word, lang, className, iconClassName }, ref) => {
   const currentWord = () => {
-    if (lang === 'hapin') {
-      if (/[\u0400-\u04FF]/.test(word.notation || '')) {
+    if (lang === "hapin") {
+      if (/[\u0400-\u04FF]/.test(word.notation || "")) {
         // 哈萨克语西里尔文字
-        return word.notation || ''
+        return word.notation || "";
       } else {
         // 哈萨克语老文字
-        return word.trans[2]
+        return word.trans[2];
       }
     } else {
-      return word.name
+      return word.name;
     }
-  }
-  const { play, stop, isPlaying } = usePronunciationSound(currentWord())
+  };
+  const { play, stop, isPlaying } = usePronunciationSound(currentWord());
 
   const playSound = useCallback(() => {
-    stop()
-    play()
-  }, [play, stop])
+    stop();
+    play();
+  }, [play, stop]);
 
   useEffect(() => {
-    return stop
-  }, [word, stop])
+    return stop;
+  }, [word, stop]);
 
   useImperativeHandle(
     ref,
@@ -40,7 +40,7 @@ export const WordPronunciationIcon = React.forwardRef<
       play: playSound,
     }),
     [playSound],
-  )
+  );
 
   return (
     <SoundIcon
@@ -49,11 +49,11 @@ export const WordPronunciationIcon = React.forwardRef<
       className={`cursor-pointer text-gray-600 ${className}`}
       iconClassName={iconClassName}
     />
-  )
-})
+  );
+});
 
-WordPronunciationIcon.displayName = 'WordPronunciationIcon'
+WordPronunciationIcon.displayName = "WordPronunciationIcon";
 
 export type WordPronunciationIconRef = {
-  play: () => void
-}
+  play: () => void;
+};

@@ -39,6 +39,12 @@ class RecordDB extends Dexie {
       reviewRecords: '++id,dict,createTime,isFinished',
       ankiCards: '++id,guid,front,back,deck,notetype,tags,importedAt,[guid]',
     })
+    this.version(5).stores({
+      wordRecords: '++id,word,timeStamp,dict,chapter,wrongCount,[dict+chapter]',
+      chapterRecords: '++id,timeStamp,dict,chapter,time,[dict+chapter]',
+      reviewRecords: '++id,dict,createTime,isFinished',
+      ankiCards: '++id,&guid,front,back,deck,notetype,tags,importedAt',
+    })
   }
 }
 
