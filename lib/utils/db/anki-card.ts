@@ -23,7 +23,33 @@ export async function addAnkiCards(
   cards: Array<Omit<IAnkiCard, "id" | "importedAt">>,
 ) {
   try {
-    const ankiCards = cards.map((card) => new AnkiCard(card));
+    const dedupedCards = Array.from(
+      new Map(
+        cards
+          .map((card) => ({ ...card, guid: card.guid.trim() }))
+          .filter((card) => card.guid)
+          .map((card) => [card.guid, card]),
+      ).values(),
+    );
+
+    if (dedupedCards.length === 0) {
+      return [];
+    }
+
+    const existingCards = await db.ankiCards
+      .where("guid")
+      .anyOf(dedupedCards.map((card) => card.guid))
+      .toArray();
+    const existingGuidSet = new Set(existingCards.map((card) => card.guid));
+    const newCards = dedupedCards.filter(
+      (card) => !existingGuidSet.has(card.guid),
+    );
+
+    if (newCards.length === 0) {
+      return [];
+    }
+
+    const ankiCards = newCards.map((card) => new AnkiCard(card));
     const ids = await db.ankiCards.bulkAdd(ankiCards, { allKeys: true });
     return ids;
   } catch (error) {

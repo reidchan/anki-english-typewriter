@@ -230,9 +230,7 @@ export function ImportDialog({
                   <p className="text-base font-medium text-gray-700">
                     {selectedFile ? selectedFile.name : "拖拽文件到此处"}
                   </p>
-                  <p className="mt-1 text-sm text-gray-500">
-                    或点击选择文件
-                  </p>
+                  <p className="mt-1 text-sm text-gray-500">或点击选择文件</p>
                 </div>
                 <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2">
                   <FileText className="h-4 w-4 text-gray-600" />
@@ -280,9 +278,7 @@ export function ImportDialog({
                   <XCircle className="h-10 w-10 text-red-600" />
                 </div>
                 <div className="text-center">
-                  <p className="text-base font-medium text-red-700">
-                    导入失败
-                  </p>
+                  <p className="text-base font-medium text-red-700">导入失败</p>
                   <p className="mt-1 text-sm text-red-600">{message}</p>
                 </div>
                 <button
