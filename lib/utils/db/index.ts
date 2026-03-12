@@ -35,25 +35,6 @@ class RecordDB extends Dexie {
   constructor() {
     super("RecordDB");
     this.version(1).stores({
-      wordRecords: "++id,word,timeStamp,dict,chapter,errorCount,[dict+chapter]",
-      chapterRecords: "++id,timeStamp,dict,chapter,time,[dict+chapter]",
-    });
-    this.version(2).stores({
-      wordRecords: "++id,word,timeStamp,dict,chapter,wrongCount,[dict+chapter]",
-      chapterRecords: "++id,timeStamp,dict,chapter,time,[dict+chapter]",
-    });
-    this.version(3).stores({
-      wordRecords: "++id,word,timeStamp,dict,chapter,wrongCount,[dict+chapter]",
-      chapterRecords: "++id,timeStamp,dict,chapter,time,[dict+chapter]",
-      reviewRecords: "++id,dict,createTime,isFinished",
-    });
-    this.version(4).stores({
-      wordRecords: "++id,word,timeStamp,dict,chapter,wrongCount,[dict+chapter]",
-      chapterRecords: "++id,timeStamp,dict,chapter,time,[dict+chapter]",
-      reviewRecords: "++id,dict,createTime,isFinished",
-      ankiCards: "++id,guid,front,back,deck,notetype,tags,importedAt,[guid]",
-    });
-    this.version(5).stores({
       wordRecords: "++id,word,timeStamp,dict,chapter,wrongCount,[dict+chapter]",
       chapterRecords: "++id,timeStamp,dict,chapter,time,[dict+chapter]",
       reviewRecords: "++id,dict,createTime,isFinished",

@@ -39,7 +39,7 @@ export default function Switcher() {
       changeTransVisibleState();
     },
     { enableOnFormTags: true, preventDefault: true },
-    []
+    [],
   );
 
   return (
@@ -75,9 +75,6 @@ export default function Switcher() {
         <AnalysisButton />
       </Tooltip>
 
-      <Tooltip className="h-7 w-7" content="指法图示">
-        <HandPositionIllustration></HandPositionIllustration>
-      </Tooltip>
       <Tooltip content="设置">
         <Setting />
       </Tooltip>
