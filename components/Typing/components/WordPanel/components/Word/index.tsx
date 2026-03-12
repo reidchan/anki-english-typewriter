@@ -241,24 +241,24 @@ export default function WordComponent({
     } else {
       // 出错时
       playBeepSound();
+      const nextLetterMistake = structuredClone(wordState.letterMistake);
+      if (nextLetterMistake[inputLength - 1]) {
+        nextLetterMistake[inputLength - 1].push(inputChar);
+      } else {
+        nextLetterMistake[inputLength - 1] = [inputChar];
+      }
+
       setWordState((state) => {
         state.letterStates[inputLength - 1] = "wrong";
         state.hasWrong = true;
         state.hasMadeInputWrong = true;
         state.wrongCount += 1;
         state.letterTimeArray = [];
-
-        if (state.letterMistake[inputLength - 1]) {
-          state.letterMistake[inputLength - 1].push(inputChar);
-        } else {
-          state.letterMistake[inputLength - 1] = [inputChar];
-        }
-
-        const currentState = JSON.parse(JSON.stringify(state));
-        dispatch({
-          type: TypingStateActionType.REPORT_WRONG_WORD,
-          payload: { letterMistake: currentState.letterMistake },
-        });
+        state.letterMistake = nextLetterMistake;
+      });
+      dispatch({
+        type: TypingStateActionType.REPORT_WRONG_WORD,
+        payload: { letterMistake: nextLetterMistake },
       });
 
       if (

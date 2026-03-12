@@ -1,4 +1,4 @@
-import type { TypingState } from '@/pages/Typing/store/type'
+import type { TypingState } from "@/pages/Typing/store/type";
 import {
   currentChapterAtom,
   currentDictInfoAtom,
@@ -7,121 +7,131 @@ import {
   phoneticConfigAtom,
   pronunciationConfigAtom,
   randomConfigAtom,
-} from '@/lib/store'
-import type { InfoPanelType } from '@/lib/types'
-import type { PronunciationType } from '@/lib/types'
-import { useAtomValue } from 'jotai'
-import mixpanel from 'mixpanel-browser'
-import { useCallback } from 'react'
+} from "@/lib/store";
+import type { InfoPanelType } from "@/lib/types";
+import type { PronunciationType } from "@/lib/types";
+import { useAtomValue } from "jotai";
+import mixpanel from "mixpanel-browser";
+import { useCallback } from "react";
 
-export type starAction = 'star' | 'dismiss'
+export type starAction = "star" | "dismiss";
 
 export function recordStarAction(action: starAction) {
   const props = {
     action,
-  }
-  mixpanel.track('star', props)
+  };
+  // mixpanel.track("star", props);
 }
 
-export type openInfoPanelLocation = 'footer' | 'resultScreen'
-export function recordOpenInfoPanelAction(type: InfoPanelType, location: openInfoPanelLocation) {
+export type openInfoPanelLocation = "footer" | "resultScreen";
+export function recordOpenInfoPanelAction(
+  type: InfoPanelType,
+  location: openInfoPanelLocation,
+) {
   const props = {
     type,
     location,
-  }
-  mixpanel.track('openInfoPanel', props)
+  };
+  // mixpanel.track("openInfoPanel", props);
 }
 
-export type shareType = 'open' | 'download'
+export type shareType = "open" | "download";
 export function recordShareAction(type: shareType) {
-  mixpanel.track('share', { type })
+  //  mixpanel.track("share", { type });
 }
 
-export type analysisType = 'open'
+export type analysisType = "open";
 export function recordAnalysisAction(type: analysisType) {
   const props = {
     type,
-  }
+  };
 
-  mixpanel.track('analysis', props)
+  // mixpanel.track("analysis", props);
 }
 
-export type errorBookType = 'open' | 'detail'
+export type errorBookType = "open" | "detail";
 export function recordErrorBookAction(type: errorBookType) {
   const props = {
     type,
-  }
+  };
 
-  mixpanel.track('error-book', props)
+  // mixpanel.track("error-book", props);
 }
 
 export type donateCardInfo = {
-  type: 'donate' | 'dismiss'
-  chapterNumber: number
-  wordNumber: number
-  sumWrongCount: number
-  dayFromFirstWord: number
-  dayFromQwerty: number
-  amount: number
-}
+  type: "donate" | "dismiss";
+  chapterNumber: number;
+  wordNumber: number;
+  sumWrongCount: number;
+  dayFromFirstWord: number;
+  dayFromQwerty: number;
+  amount: number;
+};
 
 export function reportDonateCard(info: donateCardInfo) {
   const props = {
     ...info,
-  }
+  };
 
-  mixpanel.track('donate-card', props)
+  // mixpanel.track('donate-card', props)
 }
 
 /**
  * mixpanel 单词和章节统计事件
  */
 export type ModeInfo = {
-  modeDictation: boolean
-  modeDark: boolean
-  modeShuffle: boolean
+  modeDictation: boolean;
+  modeDark: boolean;
+  modeShuffle: boolean;
 
-  enabledKeyboardSound: boolean
-  enabledPhotonicsSymbol: boolean
-  enabledSingleWordLoop: boolean
+  enabledKeyboardSound: boolean;
+  enabledPhotonicsSymbol: boolean;
+  enabledSingleWordLoop: boolean;
 
-  pronunciationAuto: boolean
-  pronunciationOption: PronunciationType | 'none'
-}
+  pronunciationAuto: boolean;
+  pronunciationOption: PronunciationType | "none";
+};
 
 export type WordLogUpload = ModeInfo & {
-  headword: string
-  timeStart: string
-  timeEnd: string
-  countInput: number
-  countCorrect: number
-  countTypo: number
-  order: number
-  chapter: string
-  wordlist: string
-}
+  headword: string;
+  timeStart: string;
+  timeEnd: string;
+  countInput: number;
+  countCorrect: number;
+  countTypo: number;
+  order: number;
+  chapter: string;
+  wordlist: string;
+};
 
 export type ChapterLogUpload = ModeInfo & {
-  chapter: string
-  wordlist: string
-  timeEnd: string
-  duration: number
-  countInput: number
-  countCorrect: number
-  countTypo: number
-}
+  chapter: string;
+  wordlist: string;
+  timeEnd: string;
+  duration: number;
+  countInput: number;
+  countCorrect: number;
+  countTypo: number;
+};
 
 export function useMixPanelWordLogUploader(typingState: TypingState) {
-  const currentChapter = useAtomValue(currentChapterAtom)
-  const { name: dictName } = useAtomValue(currentDictInfoAtom)
-  const isDarkMode = useAtomValue(isOpenDarkModeAtom)
-  const keySoundsConfig = useAtomValue(keySoundsConfigAtom)
-  const phoneticConfig = useAtomValue(phoneticConfigAtom)
-  const pronunciationConfig = useAtomValue(pronunciationConfigAtom)
-  const randomConfig = useAtomValue(randomConfigAtom)
+  const currentChapter = useAtomValue(currentChapterAtom);
+  const { name: dictName } = useAtomValue(currentDictInfoAtom);
+  const isDarkMode = useAtomValue(isOpenDarkModeAtom);
+  const keySoundsConfig = useAtomValue(keySoundsConfigAtom);
+  const phoneticConfig = useAtomValue(phoneticConfigAtom);
+  const pronunciationConfig = useAtomValue(pronunciationConfigAtom);
+  const randomConfig = useAtomValue(randomConfigAtom);
 
   const wordLogUploader = useCallback(
-    (wordLog: { headword: string; timeStart: string; timeEnd: string; countInput: number; countCorrect: number; countTypo: number }) => {
+    (wordLog: {
+      headword: string;
+      timeStart: string;
+      timeEnd: string;
+      countInput: number;
+      countCorrect: number;
+      countTypo: number;
+    }) => {
       const props: WordLogUpload = {
         ...wordLog,
         order: typingState.chapterData.index + 1,
@@ -134,9 +144,12 @@ export function useMixPanelWordLogUploader(typingState: TypingState) {
         enabledPhotonicsSymbol: phoneticConfig.isOpen,
         enabledSingleWordLoop: typingState.isLoopSingleWord,
         pronunciationAuto: pronunciationConfig.isOpen,
-        pronunciationOption: pronunciationConfig.isOpen === false ? 'none' : pronunciationConfig.type,
-      }
-      mixpanel.track('Word', props)
+        pronunciationOption:
+          pronunciationConfig.isOpen === false
+            ? "none"
+            : pronunciationConfig.type,
+      };
+      // mixpanel.track("Word", props);
     },
     [
       typingState,
@@ -149,25 +162,27 @@ export function useMixPanelWordLogUploader(typingState: TypingState) {
       pronunciationConfig.type,
       randomConfig.isOpen,
     ],
-  )
+  );
 
-  return wordLogUploader
+  return wordLogUploader;
 }
 
 export function useMixPanelChapterLogUploader(typingState: TypingState) {
-  const currentChapter = useAtomValue(currentChapterAtom)
-  const { name: dictName } = useAtomValue(currentDictInfoAtom)
-  const isDarkMode = useAtomValue(isOpenDarkModeAtom)
-  const keySoundsConfig = useAtomValue(keySoundsConfigAtom)
-  const phoneticConfig = useAtomValue(phoneticConfigAtom)
-  const pronunciationConfig = useAtomValue(pronunciationConfigAtom)
-  const randomConfig = useAtomValue(randomConfigAtom)
+  const currentChapter = useAtomValue(currentChapterAtom);
+  const { name: dictName } = useAtomValue(currentDictInfoAtom);
+  const isDarkMode = useAtomValue(isOpenDarkModeAtom);
+  const keySoundsConfig = useAtomValue(keySoundsConfigAtom);
+  const phoneticConfig = useAtomValue(phoneticConfigAtom);
+  const pronunciationConfig = useAtomValue(pronunciationConfigAtom);
+  const randomConfig = useAtomValue(randomConfigAtom);
 
   const chapterLogUploader = useCallback(() => {
     const props: ChapterLogUpload = {
       timeEnd: getUtcStringForMixpanel(),
       duration: typingState.timerData.time,
-      countInput: typingState.chapterData.correctCount + typingState.chapterData.wrongCount,
+      countInput:
+        typingState.chapterData.correctCount +
+        typingState.chapterData.wrongCount,
       countTypo: typingState.chapterData.wrongCount,
       countCorrect: typingState.chapterData.correctCount,
       chapter: (currentChapter + 1).toString(),
@@ -179,9 +194,12 @@ export function useMixPanelChapterLogUploader(typingState: TypingState) {
       enabledPhotonicsSymbol: phoneticConfig.isOpen,
       enabledSingleWordLoop: typingState.isLoopSingleWord,
       pronunciationAuto: pronunciationConfig.isOpen,
-      pronunciationOption: pronunciationConfig.isOpen === false ? 'none' : pronunciationConfig.type,
-    }
-    mixpanel.track('Chapter', props)
+      pronunciationOption:
+        pronunciationConfig.isOpen === false
+          ? "none"
+          : pronunciationConfig.type,
+    };
+    // mixpanel.track("Chapter", props);
   }, [
     typingState,
     currentChapter,
@@ -192,8 +210,8 @@ export function useMixPanelChapterLogUploader(typingState: TypingState) {
     pronunciationConfig.isOpen,
     pronunciationConfig.type,
     randomConfig.isOpen,
-  ])
-  return chapterLogUploader
+  ]);
+  return chapterLogUploader;
 }
 
 export function recordDataAction({
@@ -202,25 +220,25 @@ export function recordDataAction({
   wordCount,
   chapterCount,
 }: {
-  type: 'export' | 'import'
-  size: number
-  wordCount: number
-  chapterCount: number
+  type: "export" | "import";
+  size: number;
+  wordCount: number;
+  chapterCount: number;
 }) {
   const props = {
     type,
     size,
     wordCount,
     chapterCount,
-  }
+  };
 
-  mixpanel.track('dataAction', props)
+  // mixpanel.track("dataAction", props);
 }
 
 export function getUtcStringForMixpanel() {
-  const now = new Date()
-  const isoString = now.toISOString()
-  const utcString = isoString.substring(0, 19).replace('T', ' ')
+  const now = new Date();
+  const isoString = now.toISOString();
+  const utcString = isoString.substring(0, 19).replace("T", " ");
 
-  return utcString
+  return utcString;
 }

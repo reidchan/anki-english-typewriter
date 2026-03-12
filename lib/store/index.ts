@@ -42,7 +42,7 @@ export const loopWordConfigAtom = atomForConfig<{ times: LoopWordTimesOption }>(
   "loopWordConfig",
   {
     times: 1,
-  }
+  },
 );
 
 export const keySoundsConfigAtom = atomForConfig("keySoundsConfig", {
@@ -74,15 +74,15 @@ export const pronunciationConfigAtom = atomForConfig("pronunciation", {
 
 export const fontSizeConfigAtom = atomForConfig(
   "fontsize",
-  defaultFontSizeConfig
+  defaultFontSizeConfig,
 );
 
 export const pronunciationIsOpenAtom = atom(
-  (get) => get(pronunciationConfigAtom).isOpen
+  (get) => get(pronunciationConfigAtom).isOpen,
 );
 
 export const pronunciationIsTransReadAtom = atom(
-  (get) => get(pronunciationConfigAtom).isTransRead
+  (get) => get(pronunciationConfigAtom).isTransRead,
 );
 
 export const randomConfigAtom = atomForConfig("randomConfig", {
@@ -91,14 +91,14 @@ export const randomConfigAtom = atomForConfig("randomConfig", {
 
 export const isShowPrevAndNextWordAtom = atomWithStorage(
   "isShowPrevAndNextWord",
-  true
+  true,
 );
 
 export const isIgnoreCaseAtom = atomWithStorage("isIgnoreCase", true);
 
 export const isShowAnswerOnHoverAtom = atomWithStorage(
   "isShowAnswerOnHover",
-  true
+  true,
 );
 
 export const isTextSelectableAtom = atomWithStorage("isTextSelectable", false);
@@ -108,7 +108,7 @@ export const reviewModeInfoAtom = reviewInfoAtom({
   reviewRecord: undefined as ReviewRecord | undefined,
 });
 export const isReviewModeAtom = atom(
-  (get) => get(reviewModeInfoAtom).isReviewMode
+  (get) => get(reviewModeInfoAtom).isReviewMode,
 );
 
 export const phoneticConfigAtom = atomForConfig("phoneticConfig", {
@@ -116,10 +116,7 @@ export const phoneticConfigAtom = atomForConfig("phoneticConfig", {
   type: "us" as PhoneticType,
 });
 
-export const isOpenDarkModeAtom = atomWithStorage(
-  "isOpenDarkModeAtom",
-  false
-);
+export const isOpenDarkModeAtom = atomWithStorage("isOpenDarkModeAtom", false);
 
 export const isShowSkipAtom = atom(false);
 
@@ -140,16 +137,16 @@ export const wordDictationConfigAtom = atomForConfig("wordDictationConfig", {
 
 export const dismissStartCardDateAtom = atomWithStorage<Date | null>(
   DISMISS_START_CARD_DATE_KEY,
-  null
+  null,
 );
 
 // Enhanced version promotion popup state
 export const hasSeenEnhancedPromotionAtom = atomWithStorage(
   "hasSeenEnhancedPromotion",
-  false
+  false,
 );
 
-export const isAnkiModeAtom = atomWithStorage("isAnkiMode", false);
+export const isAnkiModeAtom = atomWithStorage("isAnkiMode", true);
 export const ankiChapterAtom = atomWithStorage("ankiChapter", 0);
 
 // for dev test

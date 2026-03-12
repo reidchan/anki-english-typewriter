@@ -36,7 +36,7 @@ export const DictChapterButton = () => {
   const dictChapterCount = currentDictInfo.chapterCount;
   const ankiChapterCount = Math.max(
     1,
-    Math.ceil(ankiCardCount / CHAPTER_LENGTH)
+    Math.ceil(ankiCardCount / CHAPTER_LENGTH),
   );
 
   const chapterCount = isAnkiMode ? ankiChapterCount : dictChapterCount;
@@ -44,7 +44,7 @@ export const DictChapterButton = () => {
   const setActiveChapter = isAnkiMode ? setAnkiChapter : setCurrentChapter;
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (
-    event
+    event,
   ) => {
     if (event.key === " ") {
       event.preventDefault();
@@ -57,19 +57,7 @@ export const DictChapterButton = () => {
 
   return (
     <>
-      <Tooltip content={isAnkiMode ? "切换到词典模式" : "切换到 Anki 模式"}>
-        <button
-          onClick={toggleAnkiMode}
-          className={`rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out focus:outline-none ${
-            isAnkiMode
-              ? "bg-emerald-500 text-white hover:bg-emerald-600"
-              : "hover:bg-indigo-400 hover:text-white dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
-          }`}
-        >
-          {isAnkiMode ? "Anki" : "词典"}
-        </button>
-      </Tooltip>
-      {isAnkiMode ? (
+      {
         <Tooltip content="管理 Anki 卡片">
           <Link
             className="block rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out hover:bg-indigo-400 hover:text-white focus:outline-none dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
@@ -78,16 +66,7 @@ export const DictChapterButton = () => {
             Anki 卡片 ({ankiCardCount})
           </Link>
         </Tooltip>
-      ) : (
-        <Tooltip content="词典切换">
-          <Link
-            className="block rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out hover:bg-indigo-400 hover:text-white focus:outline-none dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
-            href="/gallery"
-          >
-            {currentDictInfo.name} {isReviewMode && "错题复习"}
-          </Link>
-        </Tooltip>
-      )}
+      }
     </>
   );
 };

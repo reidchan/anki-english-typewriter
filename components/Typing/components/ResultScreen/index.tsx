@@ -189,7 +189,7 @@ const ResultScreen = () => {
     setCurrentChapter(0);
     setReviewModeInfo((old) => ({ ...old, isReviewMode: false }));
     router.push("/gallery");
-  }, [navigate, setCurrentChapter, setReviewModeInfo]);
+  }, [setCurrentChapter, setReviewModeInfo]);
 
   useHotkeys(
     "enter",
