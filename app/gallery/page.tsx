@@ -1,26 +1,62 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { Button } from "@headlessui/react";
 import { ImportDialog } from "@/components/Gallery/ImportDialog";
-import { deleteAnkiCard, getAllAnkiCards } from "@/lib/utils/db";
+import {
+  deleteAnkiCard,
+  getAllAnkiCards,
+  type IAnkiCard,
+} from "@/lib/utils/db/card";
 import { X } from "lucide-react";
 
 export default function GalleryPage() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<IAnkiCard[]>([]);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const deckQuery = searchParams.get("deck")?.trim() ?? "";
+  const deckIdParam = searchParams.get("deckId");
+  const targetDeckId =
+    deckIdParam !== null && deckIdParam !== "" ? Number(deckIdParam) : undefined;
 
   const loadData = async () => {
-    const data = await getAllAnkiCards();
-    console.log("data =>", data);
-    setData(data);
+    const cards = await getAllAnkiCards();
+    const filteredCards = deckQuery
+      ? cards.filter((card) => {
+          const deck = card.deck?.trim();
+          return deck === deckQuery || deck?.startsWith(`${deckQuery}::`);
+        })
+      : cards;
+    setData(filteredCards);
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    let cancelled = false;
+
+    const syncCards = async () => {
+      const cards = await getAllAnkiCards();
+      if (cancelled) return;
+
+      const filteredCards = deckQuery
+        ? cards.filter((card) => {
+            const deck = card.deck?.trim();
+            return deck === deckQuery || deck?.startsWith(`${deckQuery}::`);
+          })
+        : cards;
+
+      setData(filteredCards);
+    };
+
+    void syncCards();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deckQuery]);
 
   const handleDelete = async (id: number) => {
     await deleteAnkiCard(id);
@@ -32,20 +68,37 @@ export default function GalleryPage() {
       <div className="mx-auto max-w-7xl">
         {/* Header Section */}
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">词汇库</h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              {deckQuery ? deckQuery : "词汇库"}
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              {deckQuery
+                ? "查看该牌组及其子牌组下的所有卡片"
+                : "查看所有已导入的 Anki 卡片"}
+            </p>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => router.push("/typing")}
-            aria-label="关闭词汇库"
-            title="关闭词汇库"
-            className="cursor-pointer rounded p-1 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/decks"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              返回 Decks
+            </Link>
+            <button
+              type="button"
+              onClick={() => router.push("/typing")}
+              aria-label="关闭词汇库"
+              title="关闭词汇库"
+              className="cursor-pointer rounded p-1 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="pb-2">
+        <div className="flex items-center gap-3 pb-2">
           <ImportDialog
             trigger={
               <Button className="cursor-pointer rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 data-[active]:bg-sky-700">
@@ -53,7 +106,16 @@ export default function GalleryPage() {
               </Button>
             }
             onSuccess={loadData}
+            targetDeckId={Number.isFinite(targetDeckId) ? targetDeckId : undefined}
           />
+          {deckQuery ? (
+            <Link
+              href="/gallery"
+              className="text-sm font-medium text-sky-700 transition-colors hover:text-sky-900"
+            >
+              查看全部卡片
+            </Link>
+          ) : null}
         </div>
 
         {/* Table Section */}

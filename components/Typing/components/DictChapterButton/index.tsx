@@ -1,7 +1,7 @@
 "use client";
 
 import Tooltip from "@/components/Tooltip";
-import { getAllAnkiCards } from "@/lib/utils/db";
+import { getCardsCount } from "@/lib/utils/db/card";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -10,10 +10,10 @@ export const DictChapterButton = () => {
 
   useEffect(() => {
     const loadAnkiCardCount = async () => {
-      const cards = await getAllAnkiCards();
-      setAnkiCardCount(cards.length);
+      const count = await getCardsCount();
+      setAnkiCardCount(count);
     };
-    loadAnkiCardCount();
+    void loadAnkiCardCount();
   }, []);
 
   return (
@@ -22,7 +22,7 @@ export const DictChapterButton = () => {
         <Tooltip content="管理 Anki 卡片">
           <Link
             className="block rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out hover:bg-indigo-400 hover:text-white focus:outline-none dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
-            href="/gallery"
+            href="/decks"
           >
             Anki 卡片 ({ankiCardCount})
           </Link>

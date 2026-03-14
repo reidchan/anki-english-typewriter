@@ -6,13 +6,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { addAnkiCards } from "@/lib/utils/db";
+import { addCard, getCardsByNoteId } from "@/lib/utils/db/card";
+import { addDeck, getDeckById, getDeckByName } from "@/lib/utils/db/deck";
+import { addNote, getNoteByGuid } from "@/lib/utils/db/note";
 import { useRef, useState } from "react";
 
 interface AnkiCard {
   guid: string;
   front: string;
   back: string;
+  deck?: string;
+  notetype?: string;
+  tags?: string;
 }
 
 interface ColumnMapping {
@@ -24,12 +29,16 @@ interface ColumnMapping {
 
 type ImportStatus = "idle" | "loading" | "success" | "error";
 
+const UNCATEGORIZED_DECK = "Uncategorized";
+
 export function ImportDialog({
   trigger,
   onSuccess,
+  targetDeckId,
 }: {
   trigger: React.ReactNode;
   onSuccess?: () => void;
+  targetDeckId?: number;
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -80,6 +89,14 @@ export function ImportDialog({
       if (columns.length < 4) continue;
 
       const guid = columns[mapping.guid];
+      const deck =
+        mapping.deck !== undefined ? columns[mapping.deck]?.trim() : undefined;
+      const notetype =
+        mapping.notetype !== undefined
+          ? columns[mapping.notetype]?.trim()
+          : undefined;
+      const tags =
+        mapping.tags !== undefined ? columns[mapping.tags]?.trim() : undefined;
 
       // 对于 Basic 类型,字段顺序通常是: front, back
       // 根据列索引,找到非 guid/notetype/deck/tags 的列
@@ -99,6 +116,9 @@ export function ImportDialog({
           guid,
           front: contentColumns[0],
           back: contentColumns[1],
+          deck,
+          notetype,
+          tags,
         });
       }
     }
@@ -122,7 +142,80 @@ export function ImportDialog({
       }
 
       try {
-        await addAnkiCards(cards);
+        for (const card of cards) {
+          let targetDeck;
+
+          if (typeof targetDeckId === "number") {
+            targetDeck = await getDeckById(targetDeckId);
+            if (!targetDeck?.id) {
+              throw new Error(`未找到 Deck: ${targetDeckId}`);
+            }
+          } else {
+            const deckName = card.deck?.trim() || UNCATEGORIZED_DECK;
+            const deckParts = deckName.split("::").filter(Boolean);
+
+            let parentId: number | null = null;
+            for (let index = 0; index < deckParts.length; index += 1) {
+              const currentDeckName = deckParts.slice(0, index + 1).join("::");
+              let deckRecord = await getDeckByName(currentDeckName);
+
+              if (!deckRecord) {
+                const deckId = await addDeck({
+                  name: currentDeckName,
+                  parentId,
+                  level: index,
+                });
+                deckRecord = await getDeckByName(currentDeckName);
+                if (!deckRecord && typeof deckId === "number") {
+                  throw new Error(`创建 Deck 失败: ${currentDeckName}`);
+                }
+              }
+
+              parentId = deckRecord?.id ?? null;
+            }
+
+            targetDeck = await getDeckByName(deckName);
+            if (!targetDeck?.id) {
+              throw new Error(`未找到 Deck: ${deckName}`);
+            }
+          }
+
+          let noteRecord = await getNoteByGuid(card.guid);
+          if (!noteRecord) {
+            const noteId = await addNote({
+              guid: card.guid,
+              noteType: card.notetype,
+              sortField: card.front,
+              checksum: `${card.front}::${card.back}`,
+            });
+            noteRecord = await getNoteByGuid(card.guid);
+            if (!noteRecord && typeof noteId === "number") {
+              throw new Error(`创建 Note 失败: ${card.guid}`);
+            }
+          }
+
+          if (!noteRecord?.id) {
+            throw new Error(`未找到 Note: ${card.guid}`);
+          }
+
+          const existingCards = await getCardsByNoteId(noteRecord.id);
+          const hasCard = existingCards.some(
+            (existingCard) =>
+              existingCard.deckId === targetDeck.id && existingCard.ord === 0,
+          );
+
+          if (!hasCard) {
+            await addCard({
+              noteId: noteRecord.id,
+              deckId: targetDeck.id,
+              ord: 0,
+              cardType: "new",
+              queue: 0,
+              due: 0,
+            });
+          }
+        }
+
         setStatus("success");
         setMessage(`成功导入 ${cards.length} 张卡片`);
 
