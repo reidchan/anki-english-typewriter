@@ -1,13 +1,16 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { Button } from "@headlessui/react";
 import { ImportDialog } from "@/components/Gallery/ImportDialog";
 import { deleteAnkiCard, getAllAnkiCards } from "@/lib/utils/db";
+import { X } from "lucide-react";
 
 export default function GalleryPage() {
   const [data, setData] = useState<any[]>([]);
+  const router = useRouter();
 
   const loadData = async () => {
     const data = await getAllAnkiCards();
@@ -30,6 +33,19 @@ export default function GalleryPage() {
         {/* Header Section */}
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">词汇库</h1>
+
+          <button
+            type="button"
+            onClick={() => router.push("/typing")}
+            aria-label="关闭词汇库"
+            title="关闭词汇库"
+            className="cursor-pointer rounded p-1 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="pb-2">
           <ImportDialog
             trigger={
               <Button className="cursor-pointer rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 data-[active]:bg-sky-700">

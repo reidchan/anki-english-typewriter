@@ -50,6 +50,7 @@ export enum TypingStateActionType {
   SKIP_WORD = "SKIP_WORD",
   SKIP_2_WORD_INDEX = "SKIP_2_WORD_INDEX",
   REPEAT_CHAPTER = "REPEAT_CHAPTER",
+  RESET = "RESET",
   NEXT_CHAPTER = "NEXT_CHAPTER",
   TOGGLE_WORD_VISIBLE = "TOGGLE_WORD_VISIBLE",
   TOGGLE_TRANS_VISIBLE = "TOGGLE_TRANS_VISIBLE",
@@ -90,6 +91,7 @@ export type TypingStateAction =
   | { type: TypingStateActionType.SKIP_2_WORD_INDEX; newIndex: number }
   | { type: TypingStateActionType.REPEAT_CHAPTER; shouldShuffle: boolean }
   | { type: TypingStateActionType.NEXT_CHAPTER }
+  | { type: TypingStateActionType.RESET }
   | { type: TypingStateActionType.TOGGLE_TRANS_VISIBLE }
   | { type: TypingStateActionType.TICK_TIMER; addTime?: number }
   | { type: TypingStateActionType.ADD_WORD_RECORD_ID; payload: number }
@@ -101,7 +103,7 @@ type Dispatch = (action: TypingStateAction) => void;
 
 export const typingReducer = (
   state: TypingState,
-  action: TypingStateAction
+  action: TypingStateAction,
 ) => {
   switch (action.type) {
     case TypingStateActionType.SETUP_CHAPTER: {
@@ -147,7 +149,7 @@ export const typingReducer = (
       wordLog.wrongCount += 1;
       wordLog.LetterMistakes = mergeLetterMistake(
         wordLog.LetterMistakes,
-        letterMistake
+        letterMistake,
       );
       break;
     }
@@ -191,10 +193,23 @@ export const typingReducer = (
       state.chapterData.index = newIndex;
       break;
     }
+    case TypingStateActionType.RESET: {
+      const newState = structuredClone(initialState);
+      newState.chapterData.userInputLogs = state.chapterData.words.map(
+        (_, index) => ({ ...structuredClone(initialUserInputLog), index }),
+      );
+      newState.isTyping = false;
+      newState.chapterData.words = action.shouldShuffle
+        ? shuffle(state.chapterData.words)
+        : state.chapterData.words;
+      newState.isTransVisible = state.isTransVisible;
+      return newState;
+    }
+
     case TypingStateActionType.REPEAT_CHAPTER: {
       const newState = structuredClone(initialState);
       newState.chapterData.userInputLogs = state.chapterData.words.map(
-        (_, index) => ({ ...structuredClone(initialUserInputLog), index })
+        (_, index) => ({ ...structuredClone(initialUserInputLog), index }),
       );
       newState.isTyping = true;
       newState.chapterData.words = action.shouldShuffle
@@ -203,10 +218,11 @@ export const typingReducer = (
       newState.isTransVisible = state.isTransVisible;
       return newState;
     }
+
     case TypingStateActionType.NEXT_CHAPTER: {
       const newState = structuredClone(initialState);
       newState.chapterData.userInputLogs = state.chapterData.words.map(
-        (_, index) => ({ ...structuredClone(initialUserInputLog), index })
+        (_, index) => ({ ...structuredClone(initialUserInputLog), index }),
       );
       newState.isTyping = true;
       newState.isTransVisible = state.isTransVisible;
@@ -225,10 +241,10 @@ export const typingReducer = (
 
       state.timerData.time = newTime;
       state.timerData.accuracy = Math.round(
-        (state.chapterData.correctCount / inputSum) * 100
+        (state.chapterData.correctCount / inputSum) * 100,
       );
       state.timerData.wpm = Math.round(
-        (state.chapterData.wordCount / newTime) * 60
+        (state.chapterData.wordCount / newTime) * 60,
       );
       break;
     }

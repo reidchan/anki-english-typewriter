@@ -179,7 +179,7 @@ const ResultScreen = () => {
       setReviewModeInfo((old) => ({ ...old, isReviewMode: false }));
     } else {
       dispatch({
-        type: TypingStateActionType.REPEAT_CHAPTER,
+        type: TypingStateActionType.RESET,
         shouldShuffle: false,
       });
     }
@@ -251,97 +251,14 @@ const ResultScreen = () => {
               {/* <IconX className="text-gray-400" /> */}
               <span className="text-gray-400">✕</span>
             </button>
-            <div className="mt-10 flex flex-row gap-2 overflow-hidden">
-              <div className="flex flex-shrink-0 flex-grow-0 flex-col gap-3 px-4 sm:px-1 md:px-2 lg:px-4">
-                <RemarkRing
-                  remark={`${state.timerData.accuracy}%`}
-                  caption="正确率"
-                  percentage={state.timerData.accuracy}
-                />
-                <RemarkRing remark={timeString} caption="章节耗时" />
-                <RemarkRing remark={state.timerData.wpm + ""} caption="WPM" />
-              </div>
-              <div className="z-10 ml-6 flex-1 overflow-visible rounded-xl bg-indigo-50 dark:bg-gray-700">
-                <div className="customized-scrollbar z-20 ml-8 mr-1 flex h-80 flex-row flex-wrap content-start gap-4 overflow-y-auto overflow-x-hidden pr-7 pt-9">
-                  {wrongWords.map((word, index) => (
-                    <WordChip key={`${index}-${word.name}`} word={word} />
-                  ))}
-                </div>
-                <div className="align-center flex w-full flex-row justify-start rounded-b-xl bg-indigo-200 px-4 dark:bg-indigo-400">
-                  <ConclusionBar
-                    mistakeLevel={mistakeLevel}
-                    mistakeCount={wrongWords.length}
-                  />
-                </div>
-              </div>
-              <div className="ml-2 flex flex-col items-center justify-end gap-3 text-xl">
-                <AuthorButton />
-                {!isReviewMode && (
-                  <>
-                    <ShareButton />
-                    {/* <IexportWords fontSize={18} className="cursor-pointer text-gray-500" onClick={exportWords}></IexportWords> */}
-                    <span
-                      className="cursor-pointer text-gray-500"
-                      onClick={exportWords}
-                    >
-                      📊
-                    </span>
-                  </>
-                )}
-                {/* <IconXiaoHongShu */}
-                <span
-                  fontSize={15}
-                  className="cursor-pointer text-gray-500 hover:text-red-500 focus:outline-none"
-                  onClick={(e) => {
-                    handleOpenInfoPanel("redBook");
-                    e.currentTarget.blur();
-                  }}
-                />
-
-                <button
-                  onClick={(e) => {
-                    handleOpenInfoPanel("donate");
-                    e.currentTarget.blur();
-                  }}
-                  className="cursor-pointer"
-                  type="button"
-                  title="捐赠我们的项目"
-                >
-                  {/* <IconCoffee fontSize={17} className={`text-gray-500 hover:text-amber-500  focus:outline-none ${styles.imgShake}`} /> */}
-                  <span
-                    className={`text-gray-500 hover:text-amber-500  focus:outline-none ${styles.imgShake}`}
-                  >
-                    ☕
-                  </span>
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    handleOpenInfoPanel("community");
-                    e.currentTarget.blur();
-                  }}
-                  className="cursor-pointer text-gray-500 dark:text-gray-400"
-                  type="button"
-                  title="加入我们的社区"
-                >
-                  {/* <IconWechat fontSize={16} className="text-gray-500 hover:text-green-500 focus:outline-none" /> */}
-                  <span className="text-gray-500 hover:text-green-500 focus:outline-none">
-                    💬
-                  </span>
-                </button>
-
-                <a
-                  href="https://github.com/Kaiyiwing/qwerty-learner"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="leading-[0px]"
-                >
-                  {/* <IconGithub fontSize={16} className="text-gray-500 hover:text-green-800 focus:outline-none" /> */}
-                  <span className="text-gray-500 hover:text-green-800 focus:outline-none">
-                    🐙
-                  </span>
-                </a>
-              </div>
+            <div className="mt-10 flex w-full items-center justify-center gap-3 overflow-hidden px-4 sm:px-1 md:px-2 lg:px-4">
+              <RemarkRing
+                remark={`${state.timerData.accuracy}%`}
+                caption="正确率"
+                percentage={state.timerData.accuracy}
+              />
+              <RemarkRing remark={timeString} caption="章节耗时" />
+              <RemarkRing remark={state.timerData.wpm + ""} caption="WPM" />
             </div>
             <div className="mt-10 flex w-full justify-center gap-5 px-5 text-xl">
               {!isReviewMode && (

@@ -17,7 +17,6 @@ import {
   initialState,
   typingReducer,
 } from "./store";
-import { DonateCard } from "@/components/DonateCard";
 import Header from "@/components/Header";
 import Tooltip from "@/components/Tooltip";
 import { idDictionaryMap } from "@/lib/resources/dictionary";
@@ -160,7 +159,6 @@ const App: React.FC = () => {
 
   return (
     <TypingContext.Provider value={{ state: state, dispatch }}>
-      {state.isFinished && <DonateCard />}
       {state.isFinished && <ResultScreen />}
       <Layout>
         <Header>
