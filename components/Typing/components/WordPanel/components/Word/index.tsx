@@ -21,6 +21,7 @@ import {
   currentChapterAtom,
   currentDictInfoAtom,
   isIgnoreCaseAtom,
+  isResetWordOnWrongAtom,
   isShowAnswerOnHoverAtom,
   isTextSelectableAtom,
   pronunciationIsOpenAtom,
@@ -58,6 +59,7 @@ export default function WordComponent({
   const wordDictationConfig = useAtomValue(wordDictationConfigAtom);
   const isTextSelectable = useAtomValue(isTextSelectableAtom);
   const isIgnoreCase = useAtomValue(isIgnoreCaseAtom);
+  const isResetWordOnWrong = useAtomValue(isResetWordOnWrongAtom);
   const isShowAnswerOnHover = useAtomValue(isShowAnswerOnHoverAtom);
   const saveWordRecord = useSaveWordRecord();
   // const wordLogUploader = useMixPanelWordLogUploader(state)
@@ -322,9 +324,19 @@ export default function WordComponent({
     if (wordState.hasWrong) {
       const timer = setTimeout(() => {
         setWordState((state) => {
-          state.inputWord = "";
-          state.letterStates = new Array(state.letterStates.length).fill(
-            "normal",
+          const nextInputWord = isResetWordOnWrong
+            ? ""
+            : (() => {
+                const typedPrefix = state.inputWord.slice(0, -1);
+                const lastSpaceIndex = typedPrefix.lastIndexOf(EXPLICIT_SPACE);
+                return lastSpaceIndex === -1
+                  ? ""
+                  : typedPrefix.slice(0, lastSpaceIndex + 1);
+              })();
+
+          state.inputWord = nextInputWord;
+          state.letterStates = state.letterStates.map((_, index) =>
+            index < nextInputWord.length ? "correct" : "normal",
           );
           state.hasWrong = false;
         });
@@ -334,7 +346,7 @@ export default function WordComponent({
         clearTimeout(timer);
       };
     }
-  }, [wordState.hasWrong, setWordState]);
+  }, [isResetWordOnWrong, wordState.hasWrong, setWordState]);
 
   useEffect(() => {
     if (wordState.isFinished) {

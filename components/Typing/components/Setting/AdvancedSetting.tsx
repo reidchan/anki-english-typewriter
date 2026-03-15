@@ -1,5 +1,5 @@
 import styles from './index.module.css'
-import { isIgnoreCaseAtom, isShowAnswerOnHoverAtom, isShowPrevAndNextWordAtom, isTextSelectableAtom, randomConfigAtom } from '@/lib/store'
+import { isIgnoreCaseAtom, isResetWordOnWrongAtom, isShowAnswerOnHoverAtom, isShowPrevAndNextWordAtom, isTextSelectableAtom, randomConfigAtom } from '@/lib/store'
 import { Switch } from '@headlessui/react'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
 import { useAtom } from 'jotai'
@@ -11,6 +11,7 @@ export default function AdvancedSetting() {
   const [isIgnoreCase, setIsIgnoreCase] = useAtom(isIgnoreCaseAtom)
   const [isTextSelectable, setIsTextSelectable] = useAtom(isTextSelectableAtom)
   const [isShowAnswerOnHover, setIsShowAnswerOnHover] = useAtom(isShowAnswerOnHoverAtom)
+  const [isResetWordOnWrong, setIsResetWordOnWrong] = useAtom(isResetWordOnWrongAtom)
 
   const onToggleRandom = useCallback(
     (checked: boolean) => {
@@ -47,6 +48,12 @@ export default function AdvancedSetting() {
       setIsShowAnswerOnHover(checked)
     },
     [setIsShowAnswerOnHover],
+  )
+  const onToggleResetWordOnWrong = useCallback(
+    (checked: boolean) => {
+      setIsResetWordOnWrong(checked)
+    },
+    [setIsResetWordOnWrong],
   )
 
   return (
@@ -110,6 +117,18 @@ export default function AdvancedSetting() {
               </Switch>
               <span className="text-right text-xs font-normal leading-tight text-gray-600">{`显示提示已${
                 isShowAnswerOnHover ? '开启' : '关闭'
+              }`}</span>
+            </div>
+          </div>
+          <div className={styles.section}>
+            <span className={styles.sectionLabel}>输错后是否从头重输</span>
+            <span className={styles.sectionDescription}>关闭后，输错时只重输当前单词，前面已经输入正确的单词会保留</span>
+            <div className={styles.switchBlock}>
+              <Switch checked={isResetWordOnWrong} onChange={onToggleResetWordOnWrong} className="switch-root">
+                <span aria-hidden="true" className="switch-thumb" />
+              </Switch>
+              <span className="text-right text-xs font-normal leading-tight text-gray-600">{`从头重输已${
+                isResetWordOnWrong ? '开启' : '关闭'
               }`}</span>
             </div>
           </div>
