@@ -1,76 +1,73 @@
-'use client'
+"use client";
 
-import { TypingContext, TypingStateActionType } from '../../store'
-import Tooltip from '@/components/Tooltip'
-import { randomConfigAtom } from '@/lib/store'
-import { autoUpdate, offset, useFloating, useHover, useInteractions } from '@floating-ui/react'
-import { useAtomValue } from 'jotai'
-import { useCallback, useContext, useState } from 'react'
-import { useHotkeys } from 'react-hotkeys-hook'
+import { TypingContext, TypingStateActionType } from "../../store";
+import Tooltip from "@/components/Tooltip";
+import { randomConfigAtom } from "@/lib/store";
+import { useAtomValue } from "jotai";
+import { useCallback, useContext } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 
 export default function StartButton({ isLoading }: { isLoading: boolean }) {
-  // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
-  const { state, dispatch } = useContext(TypingContext)!
-  const randomConfig = useAtomValue(randomConfigAtom)
+  const { state, dispatch } = useContext(TypingContext)!;
+  const randomConfig = useAtomValue(randomConfigAtom);
+  const isTyping = state.isTyping;
+  const isPrimaryDisabled = isLoading;
+  const isRestartDisabled = isLoading || !state.chapterData.words?.length;
 
   const onToggleIsTyping = useCallback(() => {
-    !isLoading && dispatch({ type: TypingStateActionType.TOGGLE_IS_TYPING })
-  }, [isLoading, dispatch])
+    if (isLoading) return;
+    dispatch({ type: TypingStateActionType.TOGGLE_IS_TYPING });
+  }, [isLoading, dispatch]);
 
   const onClickRestart = useCallback(() => {
-    dispatch({ type: TypingStateActionType.REPEAT_CHAPTER, shouldShuffle: randomConfig.isOpen })
-  }, [dispatch, randomConfig.isOpen])
+    dispatch({
+      type: TypingStateActionType.REPEAT_CHAPTER,
+      shouldShuffle: randomConfig.isOpen,
+    });
+  }, [dispatch, randomConfig.isOpen]);
 
-  useHotkeys('enter', onToggleIsTyping, { enableOnFormTags: true, preventDefault: true }, [onToggleIsTyping])
-
-  const [isShowReStartButton, setIsShowReStartButton] = useState(false)
-  const { refs, context } = useFloating({
-    open: isShowReStartButton,
-    onOpenChange: setIsShowReStartButton,
-    whileElementsMounted: autoUpdate,
-    middleware: [offset(5)],
-  })
-  const hoverButton = useHover(context)
-  const { getReferenceProps, getFloatingProps } = useInteractions([hoverButton])
+  useHotkeys(
+    "enter",
+    onToggleIsTyping,
+    { enableOnFormTags: true, preventDefault: true },
+    [onToggleIsTyping],
+  );
 
   return (
-    <Tooltip content={`${state.isTyping ? '暂停' : '开始'} （Enter）`} className="box-content h-7 w-8 px-6 py-1">
-      <div
-        ref={refs.setReference}
-        {...getReferenceProps()}
-        className={`${
-          state.isTyping
-            ? 'bg-gray-400 shadow-gray-200 dark:bg-gray-600  dark:shadow-none'
-            : 'bg-indigo-500 shadow-indigo-300 dark:shadow-indigo-500/60'
-        } ${
-          isShowReStartButton ? 'h-20' : 'h-auto'
-        } flex-column absolute left-0 top-0 w-20 rounded-lg shadow-lg transition-colors duration-200`}
-      >
+    <Tooltip
+      content={`${isTyping ? "暂停" : "开始"}（Enter）`}
+      className="box-content px-4 py-2"
+    >
+      <div className="flex items-center gap-2 rounded-2xl border border-white/55 bg-white/70 p-1 shadow-[0_14px_32px_-18px_rgba(79,70,229,0.6)] backdrop-blur-sm dark:border-white/10 dark:bg-gray-900/60 dark:shadow-black/30">
         <button
-          className={`${
-            state.isTyping ? 'bg-gray-400  dark:bg-gray-700 dark:hover:bg-gray-500' : 'bg-indigo-500'
-          } my-btn-primary w-20 shadow`}
+          className={`my-btn-primary min-w-[88px] px-4 shadow-sm focus:ring-indigo-300 ${
+            isTyping
+              ? "bg-white/90 text-slate-700 ring-1 ring-slate-200 shadow-none hover:scale-100 hover:shadow-none active:scale-100 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700"
+              : "shadow-indigo-300/60"
+          } ${isPrimaryDisabled ? "cursor-not-allowed opacity-50 hover:scale-100 active:scale-100" : ""}`}
           type="button"
           onClick={onToggleIsTyping}
-          aria-label={state.isTyping ? '暂停' : '开始'}
+          aria-label={isTyping ? "暂停" : "开始"}
+          disabled={isPrimaryDisabled}
         >
-          <span className="font-medium">{state.isTyping ? 'Pause' : 'Start'}</span>
+          <span className="font-semibold tracking-[0.02em]">
+            {isTyping ? "暂停" : isLoading ? "加载中" : "开始"}
+          </span>
         </button>
-        {isShowReStartButton && (
-          <div className="absolute bottom-0 flex w-20 justify-center" ref={refs.setFloating} {...getFloatingProps()}>
-            <button
-              className={`${
-                state.isTyping ? 'bg-gray-500 dark:bg-gray-700 dark:hover:bg-gray-500 ' : 'bg-indigo-400 '
-              } my-btn-primary mb-1 mt-1 w-18  transition-colors duration-200`}
-              type="button"
-              onClick={onClickRestart}
-              aria-label={'重新开始'}
-            >
-              Restart
-            </button>
-          </div>
-        )}
+        <button
+          className={`my-btn-primary min-w-[92px] bg-white/90 px-4 text-sm font-semibold tracking-[0.02em] text-slate-700 shadow-none ring-1 ring-slate-200 hover:scale-100 hover:shadow-none active:scale-100 focus:ring-indigo-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700 dark:focus:ring-offset-gray-900 ${
+            isRestartDisabled
+              ? "cursor-not-allowed bg-slate-100/80 text-slate-400 hover:scale-100 active:scale-100 dark:bg-slate-900 dark:text-slate-500"
+              : ""
+          }`}
+          type="button"
+          onClick={onClickRestart}
+          aria-label="重新开始"
+          disabled={isRestartDisabled}
+        >
+          重新开始
+        </button>
       </div>
     </Tooltip>
-  )
+  );
 }

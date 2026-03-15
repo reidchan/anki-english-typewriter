@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { Button } from "@headlessui/react";
 import { ImportDialog } from "@/components/Gallery/ImportDialog";
-import { getCardsCount } from "@/lib/utils/db/card";
+import { getAllCards, getCardsCount } from "@/lib/utils/db/card";
 import { addDeck, getAllDecks, getDeckByName } from "@/lib/utils/db/deck";
 import type { IDeckRecord } from "@/lib/utils/db/deck";
 import {
@@ -27,9 +27,15 @@ type DeckSummary = {
   latestImportedAt?: number;
 };
 
-function buildDeckSummaries(decks: IDeckRecord[]): DeckSummary[] {
+function buildDeckSummaries(
+  decks: IDeckRecord[],
+  cardCountByDeckId: Map<number, number>,
+): DeckSummary[] {
   return [...(Array.isArray(decks) ? decks : [])]
-    .filter((deck): deck is IDeckRecord & { id: number } => typeof deck.id === "number")
+    .filter(
+      (deck): deck is IDeckRecord & { id: number } =>
+        typeof deck.id === "number",
+    )
     .sort((a, b) => {
       if (a.level !== b.level) {
         return a.level - b.level;
@@ -41,6 +47,7 @@ function buildDeckSummaries(decks: IDeckRecord[]): DeckSummary[] {
       key: deck.name,
       name: deck.name.split("::").filter(Boolean).at(-1) ?? deck.name,
       level: deck.level,
+      totalCards: cardCountByDeckId.get(deck.id) ?? 0,
       latestImportedAt: deck.updatedAt,
     }));
 }
@@ -48,6 +55,9 @@ function buildDeckSummaries(decks: IDeckRecord[]): DeckSummary[] {
 export default function DecksPage() {
   const [cardsCount, setCardsCount] = useState(0);
   const [decks, setDecks] = useState<IDeckRecord[]>([]);
+  const [cardCountByDeckId, setCardCountByDeckId] = useState<
+    Map<number, number>
+  >(new Map());
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deckName, setDeckName] = useState("");
   const [createError, setCreateError] = useState("");
@@ -55,12 +65,21 @@ export default function DecksPage() {
   const router = useRouter();
 
   const loadCards = async () => {
-    const [nextCardsCount, nextDecks] = await Promise.all([
+    const [nextCardsCount, nextDecks, nextCards] = await Promise.all([
       getCardsCount(),
       getAllDecks(),
+      getAllCards(),
     ]);
+    const nextCardCountByDeckId = new Map<number, number>();
+    nextCards.forEach((card) => {
+      nextCardCountByDeckId.set(
+        card.deckId,
+        (nextCardCountByDeckId.get(card.deckId) ?? 0) + 1,
+      );
+    });
     setCardsCount(nextCardsCount);
     setDecks(nextDecks);
+    setCardCountByDeckId(nextCardCountByDeckId);
   };
 
   const handleCreateDeck = async () => {
@@ -118,13 +137,22 @@ export default function DecksPage() {
     let cancelled = false;
 
     const syncCards = async () => {
-      const [nextCardsCount, nextDecks] = await Promise.all([
+      const [nextCardsCount, nextDecks, nextCards] = await Promise.all([
         getCardsCount(),
         getAllDecks(),
+        getAllCards(),
       ]);
       if (!cancelled) {
+        const nextCardCountByDeckId = new Map<number, number>();
+        nextCards.forEach((card) => {
+          nextCardCountByDeckId.set(
+            card.deckId,
+            (nextCardCountByDeckId.get(card.deckId) ?? 0) + 1,
+          );
+        });
         setCardsCount(nextCardsCount);
         setDecks(nextDecks);
+        setCardCountByDeckId(nextCardCountByDeckId);
       }
     };
 
@@ -135,7 +163,10 @@ export default function DecksPage() {
     };
   }, []);
 
-  const deckSummaries = useMemo(() => buildDeckSummaries(decks), [decks]);
+  const deckSummaries = useMemo(
+    () => buildDeckSummaries(decks, cardCountByDeckId),
+    [cardCountByDeckId, decks],
+  );
 
   return (
     <div className="min-h-screen bg-blue-50 px-4 py-8 sm:px-6 lg:px-8">
@@ -263,13 +294,14 @@ export default function DecksPage() {
 
           <div className="px-3 py-4 sm:px-5">
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-              <div className="grid grid-cols-[minmax(0,1.7fr)_110px_110px_110px_150px_120px] items-center border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+              <div className="grid grid-cols-[minmax(0,1.7fr)_110px_110px_110px_110px_150px_120px] items-center border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                 <div>Deck</div>
-                <div className="text-center">New</div>
-                <div className="text-center">Learn</div>
-                <div className="text-center">Due</div>
-                <div className="text-center">Imported</div>
-                <div className="text-right">Action</div>
+                <div className="text-center">总卡片数</div>
+                <div className="text-center"></div>
+                <div className="text-center"></div>
+                <div className="text-center"></div>
+                <div className="text-center">导入时间</div>
+                <div className="flex justify-end">操作</div>
               </div>
 
               {deckSummaries.length === 0 ? (
@@ -292,7 +324,7 @@ export default function DecksPage() {
                   {deckSummaries.map((deck) => (
                     <div
                       key={deck.key}
-                      className="grid grid-cols-[minmax(0,1.7fr)_110px_110px_110px_150px_120px] items-center border-b border-gray-100 px-5 py-4 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                      className="grid grid-cols-[minmax(0,1.7fr)_110px_110px_110px_110px_150px_120px] items-center border-b border-gray-100 px-5 py-4 text-sm text-gray-700 transition-colors hover:bg-gray-50"
                     >
                       <div
                         className="flex items-center gap-3"
@@ -315,8 +347,9 @@ export default function DecksPage() {
                       <div className="text-center text-base font-semibold text-sky-600">
                         {deck.totalCards ?? 0}
                       </div>
-                      <div className="text-center text-gray-400">0</div>
-                      <div className="text-center text-emerald-600">0</div>
+                      <div className="text-center text-gray-400"></div>
+                      <div className="text-center text-emerald-600"></div>
+                      <div className="text-center text-gray-400"></div>
                       <div className="text-center text-xs text-gray-500">
                         {deck.latestImportedAt
                           ? dayjs(deck.latestImportedAt * 1000).format(
@@ -324,7 +357,7 @@ export default function DecksPage() {
                             )
                           : "-"}
                       </div>
-                      <div className="text-right">
+                      <div className="flex justify-end">
                         <Link
                           href={`/gallery?deckId=${deck.id}&deck=${encodeURIComponent(deck.key)}`}
                           className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"

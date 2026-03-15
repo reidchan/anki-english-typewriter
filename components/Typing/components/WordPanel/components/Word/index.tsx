@@ -30,11 +30,17 @@ import type { Word } from "@/lib/types";
 import { CTRL, getUtcStringForMixpanel } from "@/lib/utils";
 import { useSaveWordRecord } from "@/lib/utils/db";
 import { useAtomValue } from "jotai";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useImmer } from "use-immer";
 
 const vowelLetters = ["A", "E", "I", "O", "U"];
+
+function normalizeComparableChar(char: string) {
+  return char
+    .replace(/[’‘`´]/g, "'")
+    .replace(/[“”]/g, '"');
+}
 
 export default function WordComponent({
   word,
@@ -190,6 +196,43 @@ export default function WordComponent({
     ],
   );
 
+  const displayTokens = useMemo(() => {
+    const tokens: Array<{ text: string; startIndex: number; isSpace: boolean }> = [];
+    let currentText = "";
+    let currentStartIndex = 0;
+
+    wordState.displayWord.split("").forEach((char, index) => {
+      if (char === EXPLICIT_SPACE) {
+        if (currentText) {
+          tokens.push({
+            text: currentText,
+            startIndex: currentStartIndex,
+            isSpace: false,
+          });
+          currentText = "";
+        }
+        tokens.push({ text: char, startIndex: index, isSpace: true });
+        currentStartIndex = index + 1;
+        return;
+      }
+
+      if (!currentText) {
+        currentStartIndex = index;
+      }
+      currentText += char;
+    });
+
+    if (currentText) {
+      tokens.push({
+        text: currentText,
+        startIndex: currentStartIndex,
+        isSpace: false,
+      });
+    }
+
+    return tokens;
+  }, [wordState.displayWord]);
+
   useEffect(() => {
     const inputLength = wordState.inputWord.length;
     /**
@@ -210,9 +253,12 @@ export default function WordComponent({
     const correctChar = wordState.displayWord[inputLength - 1];
     let isEqual = false;
     if (inputChar != undefined && correctChar != undefined) {
+      const normalizedInputChar = normalizeComparableChar(inputChar);
+      const normalizedCorrectChar = normalizeComparableChar(correctChar);
       isEqual = isIgnoreCase
-        ? inputChar.toLowerCase() === correctChar.toLowerCase()
-        : inputChar === correctChar;
+        ? normalizedInputChar.toLowerCase() ===
+          normalizedCorrectChar.toLowerCase()
+        : normalizedInputChar === normalizedCorrectChar;
     }
 
     if (isEqual) {
@@ -336,7 +382,7 @@ export default function WordComponent({
           <Notation notation={word.notation} />
         )}
         <div
-          className={`tooltip-info relative w-fit bg-transparent p-0 leading-normal shadow-none dark:bg-transparent ${
+          className={`tooltip-info relative w-full bg-transparent p-0 leading-normal shadow-none dark:bg-transparent ${
             wordDictationConfig.isOpen ? "tooltip" : ""
           }`}
           data-tip="按 Tab 快捷键显示完整单词"
@@ -344,18 +390,35 @@ export default function WordComponent({
           <div
             onMouseEnter={() => handleHoverWord(true)}
             onMouseLeave={() => handleHoverWord(false)}
-            className={`flex items-center ${isTextSelectable && "select-all"} justify-center ${wordState.hasWrong ? style.wrong : ""}`}
+            className={`mx-auto flex w-full max-w-[56rem] flex-wrap items-center justify-center ${isTextSelectable && "select-all"} ${wordState.hasWrong ? style.wrong : ""}`}
           >
-            {wordState.displayWord.split("").map((t, index) => {
-              return (
+            {displayTokens.map((token) =>
+              token.isSpace ? (
                 <Letter
-                  key={`${index}-${t}`}
-                  letter={t}
-                  visible={getLetterVisible(index)}
-                  state={wordState.letterStates[index]}
+                  key={`${token.startIndex}-${token.text}`}
+                  letter={token.text}
+                  visible={getLetterVisible(token.startIndex)}
+                  state={wordState.letterStates[token.startIndex]}
                 />
-              );
-            })}
+              ) : (
+                <span
+                  key={`${token.startIndex}-${token.text}`}
+                  className="inline-flex shrink-0"
+                >
+                  {token.text.split("").map((char, offset) => {
+                    const index = token.startIndex + offset;
+                    return (
+                      <Letter
+                        key={`${index}-${char}`}
+                        letter={char}
+                        visible={getLetterVisible(index)}
+                        state={wordState.letterStates[index]}
+                      />
+                    );
+                  })}
+                </span>
+              ),
+            )}
           </div>
           {pronunciationIsOpen && (
             <div className="absolute -right-12 top-1/2 h-9 w-9 -translate-y-1/2 transform ">

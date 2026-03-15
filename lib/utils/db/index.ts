@@ -1,18 +1,16 @@
 import type {
-  IChapterRecord,
   IReviewRecord,
   IRevisionDictRecord,
   IWordRecord,
   LetterMistakes,
 } from "./record";
-import { ChapterRecord, ReviewRecord, WordRecord } from "./record";
+import { ReviewRecord, WordRecord } from "./record";
 import type { IDeckRecord } from "./deck";
 import { DeckRecord } from "./deck";
 import {
   TypingContext,
   TypingStateActionType,
 } from "@/components/Typing/store";
-import type { TypingState } from "@/pages/Typing/store/type";
 import {
   currentChapterAtom,
   currentDictIdAtom,
@@ -25,7 +23,6 @@ import { useCallback, useContext } from "react";
 
 class RecordDB extends Dexie {
   wordRecords!: Table<IWordRecord, number>;
-  chapterRecords!: Table<IChapterRecord, number>;
   reviewRecords!: Table<IReviewRecord, number>;
 
   revisionDictRecords!: Table<IRevisionDictRecord, number>;
@@ -39,10 +36,10 @@ class RecordDB extends Dexie {
     super("RecordDB");
     this.version(1).stores({
       wordRecords: "++id,word,timeStamp,dict,chapter,wrongCount,[dict+chapter]",
-      chapterRecords: "++id,timeStamp,dict,chapter,time,[dict+chapter]",
       reviewRecords: "++id,dict,createTime,isFinished",
       decks: "++id,&name,parentId,level,createdAt,updatedAt,[parentId+name]",
-      notes: "++id,&guid,noteType,sortField,checksum,createdAt,updatedAt",
+      notes:
+        "++id,&guid,noteType,sortField,checksum,backEnglish,createdAt,updatedAt",
       cards:
         "++id,noteId,deckId,ord,cardType,queue,due,importedAt,updatedAt,[noteId+ord],[deckId+due],[deckId+ord]",
     });
@@ -52,50 +49,8 @@ class RecordDB extends Dexie {
 export const db = new RecordDB();
 
 db.wordRecords.mapToClass(WordRecord);
-db.chapterRecords.mapToClass(ChapterRecord);
 db.reviewRecords.mapToClass(ReviewRecord);
 db.decks.mapToClass(DeckRecord);
-
-export function useSaveChapterRecord() {
-  const currentChapter = useAtomValue(currentChapterAtom);
-  const isRevision = useAtomValue(isReviewModeAtom);
-  const dictID = useAtomValue(currentDictIdAtom);
-
-  const saveChapterRecord = useCallback(
-    (typingState: TypingState) => {
-      const {
-        chapterData: {
-          correctCount,
-          wrongCount,
-          userInputLogs,
-          wordCount,
-          words,
-          wordRecordIds,
-        },
-        timerData: { time },
-      } = typingState;
-      const correctWordIndexes = userInputLogs
-        .filter((log) => log.correctCount > 0 && log.wrongCount === 0)
-        .map((log) => log.index);
-
-      const chapterRecord = new ChapterRecord(
-        dictID,
-        isRevision ? -1 : currentChapter,
-        time,
-        correctCount,
-        wrongCount,
-        wordCount,
-        correctWordIndexes,
-        words.length,
-        wordRecordIds ?? [],
-      );
-      db.chapterRecords.add(chapterRecord);
-    },
-    [currentChapter, dictID, isRevision],
-  );
-
-  return saveChapterRecord;
-}
 
 export type WordKeyLogger = {
   letterTimeArray: number[];

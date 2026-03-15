@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@headlessui/react";
 import { ImportDialog } from "@/components/Gallery/ImportDialog";
 import {
@@ -14,14 +14,19 @@ import {
 } from "@/lib/utils/db/card";
 import { X } from "lucide-react";
 
+const PAGE_SIZE = 10;
+
 export default function GalleryPage() {
   const [data, setData] = useState<IAnkiCard[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
   const searchParams = useSearchParams();
   const deckQuery = searchParams.get("deck")?.trim() ?? "";
   const deckIdParam = searchParams.get("deckId");
   const targetDeckId =
-    deckIdParam !== null && deckIdParam !== "" ? Number(deckIdParam) : undefined;
+    deckIdParam !== null && deckIdParam !== ""
+      ? Number(deckIdParam)
+      : undefined;
 
   const loadData = async () => {
     const cards = await getAllAnkiCards();
@@ -33,6 +38,16 @@ export default function GalleryPage() {
       : cards;
     setData(filteredCards);
   };
+
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedData = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * PAGE_SIZE;
+    return data.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [data, safeCurrentPage]);
+  const startItem =
+    data.length === 0 ? 0 : (safeCurrentPage - 1) * PAGE_SIZE + 1;
+  const endItem = Math.min(safeCurrentPage * PAGE_SIZE, data.length);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +64,7 @@ export default function GalleryPage() {
         : cards;
 
       setData(filteredCards);
+      setCurrentPage(1);
     };
 
     void syncCards();
@@ -60,7 +76,7 @@ export default function GalleryPage() {
 
   const handleDelete = async (id: number) => {
     await deleteAnkiCard(id);
-    loadData();
+    await loadData();
   };
 
   return (
@@ -106,7 +122,9 @@ export default function GalleryPage() {
               </Button>
             }
             onSuccess={loadData}
-            targetDeckId={Number.isFinite(targetDeckId) ? targetDeckId : undefined}
+            targetDeckId={
+              Number.isFinite(targetDeckId) ? targetDeckId : undefined
+            }
           />
           {deckQuery ? (
             <Link
@@ -119,8 +137,14 @@ export default function GalleryPage() {
         </div>
 
         {/* Table Section */}
-        <div className="overflow-hidden rounded-lg bg-white shadow">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto rounded-lg bg-white shadow">
+          <table className="min-w-full table-fixed divide-y divide-gray-200">
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[46%]" />
+              <col className="w-[20%]" />
+              <col className="w-[12%]" />
+            </colgroup>
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -138,24 +162,28 @@ export default function GalleryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {data.map((item) => {
+              {paginatedData.map((item) => {
                 return (
                   <tr
                     className="transition-colors duration-150 hover:bg-gray-50"
                     key={item.guid}
                   >
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      {item.front}
+                    <td className="px-6 py-4 text-sm text-gray-900 align-top">
+                      <div className="line-clamp-2 min-h-10 break-words leading-5">
+                        {item.front}
+                      </div>
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      {item.back}
+                    <td className="px-6 py-4 text-sm text-gray-900 align-top">
+                      <div className="line-clamp-2 min-h-10 break-words whitespace-normal leading-5">
+                        {item.backEnglish}
+                      </div>
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 align-top">
                       {dayjs(item.importedAt * 1000).format(
                         "YYYY-MM-DD HH:mm:ss",
                       )}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm">
+                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm align-top">
                       <button
                         onClick={() => {
                           if (
@@ -174,6 +202,35 @@ export default function GalleryPage() {
               })}
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-gray-500">
+            {`显示第 ${startItem}-${endItem} 条，共 ${data.length} 条`}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={safeCurrentPage === 1}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              上一页
+            </button>
+            <span className="min-w-20 text-center text-sm font-medium text-gray-600">
+              {safeCurrentPage} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((page) => Math.min(totalPages, page + 1))
+              }
+              disabled={safeCurrentPage === totalPages}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              下一页
+            </button>
+          </div>
         </div>
       </div>
     </div>

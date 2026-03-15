@@ -29,8 +29,6 @@ import {
   reviewModeInfoAtom,
 } from "@/lib/store";
 import { IsDesktop, isLegal } from "@/lib/utils";
-import { useSaveChapterRecord } from "@/lib/utils/db";
-import { useMixPanelChapterLogUploader } from "@/lib/utils/mixpanel";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -47,8 +45,6 @@ const App: React.FC = () => {
   const [currentDictId, setCurrentDictId] = useAtom(currentDictIdAtom);
   const setCurrentChapter = useSetAtom(currentChapterAtom);
   const randomConfig = useAtomValue(randomConfigAtom);
-  const chapterLogUploader = useMixPanelChapterLogUploader(state);
-  const saveChapterRecord = useSaveChapterRecord();
 
   const reviewModeInfo = useAtomValue(reviewModeInfoAtom);
   const isReviewMode = useAtomValue(isReviewModeAtom);
@@ -137,8 +133,7 @@ const App: React.FC = () => {
   useEffect(() => {
     // 当用户完成章节后且完成 word Record 数据保存，记录 chapter Record 数据,
     if (state.isFinished && !state.isSavingRecord) {
-      chapterLogUploader();
-      saveChapterRecord(state);
+      // saveChapterRecord(state);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,19 +158,15 @@ const App: React.FC = () => {
       <Layout>
         <Header>
           <DictChapterButton />
-          <PronunciationSwitcher />
+          {/* <PronunciationSwitcher /> */}
           <Switcher />
           <StartButton isLoading={isLoading} />
           <Tooltip content="跳过该词">
             <button
-              className={`${
-                state.isShowSkip
-                  ? "bg-orange-400"
-                  : "invisible w-0 bg-gray-300 px-0 opacity-0"
-              } my-btn-primary transition-all duration-300 `}
+              className={`bg-orange-400 my-btn-primary transition-all duration-300 `}
               onClick={skipWord}
             >
-              Skip
+              跳过
             </button>
           </Tooltip>
         </Header>

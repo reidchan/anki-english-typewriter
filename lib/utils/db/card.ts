@@ -1,4 +1,5 @@
 import { getUTCUnixTimestamp } from "../index";
+import { parseNoteContentFromFields } from "./note-content";
 import { db } from "./index";
 import type { IDeckRecord } from "./deck";
 import type { INoteRecord } from "./note";
@@ -20,6 +21,7 @@ export interface IAnkiCard {
   guid: string;
   front: string;
   back: string;
+  backEnglish?: string;
   deck?: string;
   notetype?: string;
   importedAt: number;
@@ -142,29 +144,7 @@ export async function getCardsCount() {
 }
 
 function parseNoteContent(note?: INoteRecord) {
-  const rawFront = note?.sortField?.trim() ?? "";
-  const checksum = note?.checksum ?? "";
-
-  if (!checksum) {
-    return { front: rawFront, back: "" };
-  }
-
-  if (rawFront && checksum.startsWith(`${rawFront}::`)) {
-    return {
-      front: rawFront,
-      back: checksum.slice(rawFront.length + 2),
-    };
-  }
-
-  const separatorIndex = checksum.indexOf("::");
-  if (separatorIndex === -1) {
-    return { front: rawFront || checksum, back: "" };
-  }
-
-  const front = rawFront || checksum.slice(0, separatorIndex);
-  const back = checksum.slice(separatorIndex + 2);
-
-  return { front, back };
+  return parseNoteContentFromFields(note?.sortField, note?.checksum);
 }
 
 function buildAnkiCard(
@@ -182,7 +162,7 @@ function buildAnkiCard(
     id: card.id,
     guid: note.guid,
     front,
-    back,
+    back: note.backEnglish,
     deck: deck?.name,
     notetype: note.noteType,
     importedAt: card.importedAt,
@@ -202,7 +182,13 @@ export async function getAllAnkiCards(): Promise<IAnkiCard[]> {
     const deckById = new Map(decks.map((deck) => [deck.id, deck]));
 
     return cards
-      .map((card) => buildAnkiCard(card, noteById.get(card.noteId), deckById.get(card.deckId)))
+      .map((card) =>
+        buildAnkiCard(
+          card,
+          noteById.get(card.noteId),
+          deckById.get(card.deckId),
+        ),
+      )
       .filter((card): card is IAnkiCard => card !== null)
       .sort((a, b) => b.importedAt - a.importedAt);
   } catch (error) {
@@ -218,7 +204,10 @@ export async function deleteAnkiCard(id: number) {
 
     await db.cards.delete(id);
 
-    const remainingCards = await db.cards.where("noteId").equals(card.noteId).count();
+    const remainingCards = await db.cards
+      .where("noteId")
+      .equals(card.noteId)
+      .count();
     if (remainingCards === 0) {
       await db.notes.delete(card.noteId);
     }

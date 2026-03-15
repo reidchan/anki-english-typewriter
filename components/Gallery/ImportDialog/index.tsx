@@ -8,7 +8,13 @@ import {
 } from "@/components/ui/dialog";
 import { addCard, getCardsByNoteId } from "@/lib/utils/db/card";
 import { addDeck, getDeckById, getDeckByName } from "@/lib/utils/db/deck";
-import { addNote, getNoteByGuid } from "@/lib/utils/db/note";
+import {
+  addNote,
+  extractBackEnglish,
+  getNoteByGuid,
+  updateNote,
+} from "@/lib/utils/db/note";
+import { buildNoteChecksum } from "@/lib/utils/db/note-content";
 import { useRef, useState } from "react";
 
 interface AnkiCard {
@@ -143,6 +149,8 @@ export function ImportDialog({
 
       try {
         for (const card of cards) {
+          const checksum = buildNoteChecksum(card.front, card.back);
+          const backEnglish = extractBackEnglish(card.back);
           let targetDeck;
 
           if (typeof targetDeckId === "number") {
@@ -186,12 +194,26 @@ export function ImportDialog({
               guid: card.guid,
               noteType: card.notetype,
               sortField: card.front,
-              checksum: `${card.front}::${card.back}`,
+              checksum,
+              backEnglish,
             });
             noteRecord = await getNoteByGuid(card.guid);
             if (!noteRecord && typeof noteId === "number") {
               throw new Error(`创建 Note 失败: ${card.guid}`);
             }
+          } else if (
+            noteRecord.sortField !== card.front ||
+            noteRecord.checksum !== checksum ||
+            noteRecord.noteType !== card.notetype ||
+            noteRecord.backEnglish !== backEnglish
+          ) {
+            await updateNote(noteRecord.id, {
+              noteType: card.notetype,
+              sortField: card.front,
+              checksum,
+              backEnglish,
+            });
+            noteRecord = await getNoteByGuid(card.guid);
           }
 
           if (!noteRecord?.id) {

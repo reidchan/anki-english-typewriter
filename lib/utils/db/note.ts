@@ -1,4 +1,5 @@
 import { getUTCUnixTimestamp } from "../index";
+import { extractBackEnglish } from "./note-content";
 import { db } from "./index";
 
 export interface INoteRecord {
@@ -7,6 +8,7 @@ export interface INoteRecord {
   noteType?: string;
   sortField?: string;
   checksum?: string;
+  backEnglish?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -17,6 +19,7 @@ export class NoteRecord implements INoteRecord {
   noteType?: string;
   sortField?: string;
   checksum?: string;
+  backEnglish?: string;
   createdAt: number;
   updatedAt: number;
 
@@ -25,12 +28,14 @@ export class NoteRecord implements INoteRecord {
     noteType?: string;
     sortField?: string;
     checksum?: string;
+    backEnglish?: string;
   }) {
     const now = getUTCUnixTimestamp();
     this.guid = data.guid;
     this.noteType = data.noteType;
     this.sortField = data.sortField;
     this.checksum = data.checksum;
+    this.backEnglish = data.backEnglish;
     this.createdAt = now;
     this.updatedAt = now;
   }
@@ -48,6 +53,8 @@ export async function addNote(
     throw error;
   }
 }
+
+export { extractBackEnglish };
 
 export async function getNoteById(id: number) {
   try {
