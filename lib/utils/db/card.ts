@@ -144,7 +144,7 @@ export async function getCardsCount() {
 }
 
 function parseNoteContent(note?: INoteRecord) {
-  return parseNoteContentFromFields(note?.sortField, note?.checksum);
+  return parseNoteContentFromFields(note?.front, note?.rawContent);
 }
 
 function buildAnkiCard(
@@ -156,13 +156,14 @@ function buildAnkiCard(
     return null;
   }
 
-  const { front, back } = parseNoteContent(note);
+  const { front } = parseNoteContent(note);
 
   return {
     id: card.id,
     guid: note.guid,
     front,
     back: note.backEnglish,
+    backEnglish: note.backEnglish,
     deck: deck?.name,
     notetype: note.noteType,
     importedAt: card.importedAt,

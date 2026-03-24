@@ -14,7 +14,7 @@ import {
   getNoteByGuid,
   updateNote,
 } from "@/lib/utils/db/note";
-import { buildNoteChecksum } from "@/lib/utils/db/note-content";
+import { buildRawContent } from "@/lib/utils/db/note-content";
 import { useRef, useState } from "react";
 
 interface AnkiCard {
@@ -149,8 +149,9 @@ export function ImportDialog({
 
       try {
         for (const card of cards) {
-          const checksum = buildNoteChecksum(card.front, card.back);
+          const rawContent = buildRawContent(card.front, card.back);
           const backEnglish = extractBackEnglish(card.back);
+
           let targetDeck;
 
           if (typeof targetDeckId === "number") {
@@ -193,8 +194,8 @@ export function ImportDialog({
             const noteId = await addNote({
               guid: card.guid,
               noteType: card.notetype,
-              sortField: card.front,
-              checksum,
+              front: card.front,
+              rawContent,
               backEnglish,
             });
             noteRecord = await getNoteByGuid(card.guid);
@@ -202,15 +203,15 @@ export function ImportDialog({
               throw new Error(`创建 Note 失败: ${card.guid}`);
             }
           } else if (
-            noteRecord.sortField !== card.front ||
-            noteRecord.checksum !== checksum ||
+            noteRecord.front !== card.front ||
+            noteRecord.rawContent !== rawContent ||
             noteRecord.noteType !== card.notetype ||
             noteRecord.backEnglish !== backEnglish
           ) {
             await updateNote(noteRecord.id, {
               noteType: card.notetype,
-              sortField: card.front,
-              checksum,
+              front: card.front,
+              rawContent,
               backEnglish,
             });
             noteRecord = await getNoteByGuid(card.guid);

@@ -6,9 +6,9 @@ export interface INoteRecord {
   id?: number;
   guid: string;
   noteType?: string;
-  sortField?: string;
-  checksum?: string;
-  backEnglish?: string;
+  front?: string;
+  rawContent?: string;
+  backEnglish: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -17,8 +17,8 @@ export class NoteRecord implements INoteRecord {
   id?: number;
   guid: string;
   noteType?: string;
-  sortField?: string;
-  checksum?: string;
+  front?: string;
+  rawContent?: string;
   backEnglish?: string;
   createdAt: number;
   updatedAt: number;
@@ -26,15 +26,15 @@ export class NoteRecord implements INoteRecord {
   constructor(data: {
     guid: string;
     noteType?: string;
-    sortField?: string;
-    checksum?: string;
+    front?: string;
+    rawContent?: string;
     backEnglish?: string;
   }) {
     const now = getUTCUnixTimestamp();
     this.guid = data.guid;
     this.noteType = data.noteType;
-    this.sortField = data.sortField;
-    this.checksum = data.checksum;
+    this.front = data.front;
+    this.rawContent = data.rawContent;
     this.backEnglish = data.backEnglish;
     this.createdAt = now;
     this.updatedAt = now;

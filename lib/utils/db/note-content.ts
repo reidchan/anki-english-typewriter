@@ -54,35 +54,51 @@ export function extractBackEnglish(back: string) {
   return cleaned;
 }
 
-export function buildNoteChecksum(front: string, back: string) {
+export function sanitizeBackContent(back: string) {
+  return decodeHtmlEntities(
+    back
+      .replace(/\[sound:[^\]]+\]/gi, " ")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\r?\n/g, " ")
+      .replace(/\s+/g, " "),
+  )
+    .replace(/^["']+|["']+$/g, "")
+    .trim();
+}
+
+export function buildRawContent(front: string, back: string) {
   return `${front}::${back}`;
 }
 
 export function parseNoteContentFromFields(
-  sortField?: string,
-  checksum?: string,
+  front?: string,
+  rawContent?: string,
 ) {
-  const rawFront = sortField?.trim() ?? "";
-  const rawChecksum = checksum ?? "";
+  const normalizedFront = front?.trim() ?? "";
+  const storedRawContent = rawContent ?? "";
 
-  if (!rawChecksum) {
-    return { front: rawFront, back: "" };
+  if (!storedRawContent) {
+    return { front: normalizedFront, back: "" };
   }
 
-  if (rawFront && rawChecksum.startsWith(`${rawFront}::`)) {
+  if (
+    normalizedFront &&
+    storedRawContent.startsWith(`${normalizedFront}::`)
+  ) {
     return {
-      front: rawFront,
-      back: rawChecksum.slice(rawFront.length + 2),
+      front: normalizedFront,
+      back: storedRawContent.slice(normalizedFront.length + 2),
     };
   }
 
-  const separatorIndex = rawChecksum.indexOf("::");
+  const separatorIndex = storedRawContent.indexOf("::");
   if (separatorIndex === -1) {
-    return { front: rawFront || rawChecksum, back: "" };
+    return { front: normalizedFront || storedRawContent, back: "" };
   }
 
   return {
-    front: rawFront || rawChecksum.slice(0, separatorIndex),
-    back: rawChecksum.slice(separatorIndex + 2),
+    front: normalizedFront || storedRawContent.slice(0, separatorIndex),
+    back: storedRawContent.slice(separatorIndex + 2),
   };
 }

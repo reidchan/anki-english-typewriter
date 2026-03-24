@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@headlessui/react";
+import { AiOptimizeDialog } from "@/components/Gallery/AiOptimizeDialog";
 import { ImportDialog } from "@/components/Gallery/ImportDialog";
 import {
   deleteAnkiCard,
@@ -184,18 +185,37 @@ export default function GalleryPage() {
                       )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm align-top">
-                      <button
-                        onClick={() => {
-                          if (
-                            window.confirm(`确定要删除「${item.front}」吗？`)
-                          ) {
-                            handleDelete(item.id);
+                      <div className="flex items-center justify-end gap-4">
+                        <AiOptimizeDialog
+                          card={{
+                            front: item.front,
+                            backEnglish: item.backEnglish ?? "",
+                            deck: item.deck,
+                            notetype: item.notetype,
+                          }}
+                          trigger={
+                            <button
+                              type="button"
+                              className="cursor-pointer text-sky-600 transition-colors duration-150 hover:text-sky-800"
+                            >
+                              AI优化
+                            </button>
                           }
-                        }}
-                        className="text-red-600 hover:text-red-800 transition-colors duration-150 cursor-pointer"
-                      >
-                        删除
-                      </button>
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (
+                              window.confirm(`确定要删除「${item.front}」吗？`)
+                            ) {
+                              handleDelete(item.id);
+                            }
+                          }}
+                          className="cursor-pointer text-red-600 transition-colors duration-150 hover:text-red-800"
+                        >
+                          删除
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

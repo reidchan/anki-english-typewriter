@@ -7,6 +7,8 @@ import type {
 import { ReviewRecord, WordRecord } from "./record";
 import type { IDeckRecord } from "./deck";
 import { DeckRecord } from "./deck";
+import type { ICardRecord } from "./card";
+import type { INoteRecord } from "./note";
 import {
   TypingContext,
   TypingStateActionType,
@@ -29,8 +31,8 @@ class RecordDB extends Dexie {
   revisionWordRecords!: Table<IWordRecord, number>;
 
   decks!: Table<IDeckRecord, number>;
-  notes!: Table<any, number>;
-  cards!: Table<any, number>;
+  notes!: Table<INoteRecord, number>;
+  cards!: Table<ICardRecord, number>;
 
   constructor() {
     super("RecordDB");
@@ -39,7 +41,7 @@ class RecordDB extends Dexie {
       reviewRecords: "++id,dict,createTime,isFinished",
       decks: "++id,&name,parentId,level,createdAt,updatedAt,[parentId+name]",
       notes:
-        "++id,&guid,noteType,sortField,checksum,backEnglish,createdAt,updatedAt",
+        "++id,&guid,noteType,front,rawContent,backEnglish,createdAt,updatedAt",
       cards:
         "++id,noteId,deckId,ord,cardType,queue,due,importedAt,updatedAt,[noteId+ord],[deckId+due],[deckId+ord]",
     });
@@ -98,11 +100,12 @@ export function useSaveWordRecord() {
         console.error(e);
       }
       if (dispatch) {
-        dbID > 0 &&
+        if (dbID > 0) {
           dispatch({
             type: TypingStateActionType.ADD_WORD_RECORD_ID,
             payload: dbID,
           });
+        }
         dispatch({
           type: TypingStateActionType.SET_IS_SAVING_RECORD,
           payload: false,
